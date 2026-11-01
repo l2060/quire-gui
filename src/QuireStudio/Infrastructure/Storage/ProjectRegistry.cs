@@ -9,16 +9,18 @@ namespace QuireStudio.Infrastructure.Storage;
 public sealed class ProjectRegistry
 {
     private readonly string? _filePath;
+    private readonly string? _workspaceRoot;
     private RegistryDocument _document;
 
-    private ProjectRegistry(string? filePath, RegistryDocument document)
+    private ProjectRegistry(string? filePath, string? workspaceRoot, RegistryDocument document)
     {
         _filePath = filePath;
+        _workspaceRoot = workspaceRoot;
         _document = document;
     }
 
     /// <summary>创建一个尚未绑定工作区的空登记表（保存时不做任何事）。</summary>
-    public static ProjectRegistry CreateEmpty() => new(null, new RegistryDocument());
+    public static ProjectRegistry CreateEmpty() => new(null, null, new RegistryDocument());
 
     /// <summary>当前登记的项目，保持登记顺序。</summary>
     public IReadOnlyList<ProjectRecord> Projects => _document.Projects;
@@ -37,11 +39,18 @@ public sealed class ProjectRegistry
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
 
         string path = filePath;
+        string? workspaceRoot = Path.GetDirectoryName(Path.GetFullPath(path));
+
         RegistryDocument document = JsonFileStore.Read<RegistryDocument>(path) ?? new RegistryDocument();
         document.Projects ??= [];
 
-        // 丢弃配置已消失的重复项，保持列表干净。
+        // 磁盘上存的是相对工作区的路径，载入时还原成绝对路径；
+        // 历史数据里的绝对路径同样兼容。
         document.Projects = document.Projects
+            .Select(project => project with
+            {
+                ConfigPath = WorkspaceRelativePath.Resolve(workspaceRoot, project.ConfigPath) ?? "",
+            })
             .Where(project => !string.IsNullOrWhiteSpace(project.ConfigPath))
             .GroupBy(project => project.ConfigPath, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.OrderByDescending(project => project.LastOpenedUtc).First())
@@ -52,7 +61,7 @@ public sealed class ProjectRegistry
             document.ActiveProjectId = document.Projects.FirstOrDefault()?.Id;
         }
 
-        return new ProjectRegistry(path, document);
+        return new ProjectRegistry(path, workspaceRoot, document);
     }
 
     public ProjectRecord? Find(string? id) =>
@@ -130,7 +139,20 @@ public sealed class ProjectRegistry
 
         try
         {
-            JsonFileStore.Write(_filePath, _document);
+            // 写盘前把绝对路径折回相对工作区的形式，便于工作区整体搬移。
+            var snapshot = new RegistryDocument
+            {
+                Version = _document.Version,
+                ActiveProjectId = _document.ActiveProjectId,
+                Projects = _document.Projects
+                    .Select(project => project with
+                    {
+                        ConfigPath = WorkspaceRelativePath.ToStored(_workspaceRoot, project.ConfigPath),
+                    })
+                    .ToList(),
+            };
+
+            JsonFileStore.Write(_filePath, snapshot);
             return true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
