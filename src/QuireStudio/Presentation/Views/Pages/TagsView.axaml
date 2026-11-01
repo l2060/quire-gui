@@ -1,0 +1,265 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:QuireStudio.Presentation"
+             xmlns:controls="using:QuireStudio.Presentation.Controls"
+             x:Class="QuireStudio.Presentation.Views.Pages.TagsView">
+
+  <Grid RowDefinitions="Auto,Auto,*">
+
+    <!-- 页头 -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+      <StackPanel Spacing="5">
+        <TextBlock Classes="eyebrow" Text="RELEASE GRAPH" />
+        <TextBlock Classes="h1" Text="打包分支" />
+        <TextBlock Classes="subtitle" TextWrapping="Wrap" MaxWidth="560" HorizontalAlignment="Left"
+                   Text="每个 Tag 都是一次构建记录，父子关系构成发布链。打包只生成候选，提交后才推进基线。" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+        <TextBox Width="168" Text="{Binding NewTagName}" Watermark="候选名称（可留空）" />
+        <Button Classes="primary" Command="{Binding PackageCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <controls:IconPresenter Source="{x:Static ui:Icons.Package}" Width="14" Height="14"
+                                    Stroke="#FFFFFF" />
+            <TextBlock Text="打包候选" FontSize="12" Foreground="#FFFFFF" />
+          </StackPanel>
+        </Button>
+        <Button Classes="ghost" Command="{Binding RefreshCommand}" ToolTip.Tip="刷新历史">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Refresh}" Width="15" Height="15"
+                                  Stroke="{DynamicResource TextSecondaryBrush}" />
+        </Button>
+      </StackPanel>
+    </Grid>
+
+    <!-- 打包进度 -->
+    <Border Grid.Row="1" Classes="card" Padding="16,12" Margin="0,0,0,14"
+            IsVisible="{Binding IsPackaging}">
+      <Grid RowDefinitions="Auto,Auto">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="{Binding ProgressStage}" FontSize="12" FontWeight="Medium" />
+            <TextBlock Text="{Binding ProgressDetail}" FontSize="11"
+                       Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center" />
+          </StackPanel>
+          <Button Grid.Column="1" Classes="ghost" Command="{Binding CancelCommand}" Padding="10,4"
+                  Content="取消" FontSize="11" />
+        </Grid>
+        <ProgressBar Grid.Row="1" Margin="0,10,0,0" Maximum="100" Value="{Binding ProgressPercent}"
+                     IsIndeterminate="{Binding IsProgressIndeterminate}" />
+      </Grid>
+    </Border>
+
+    <!-- 主体 -->
+    <Grid Grid.Row="2" ColumnDefinitions="1.3*,14,*">
+
+      <!-- 历史图 -->
+      <Border Grid.Column="0" Classes="card" Padding="0">
+        <Grid RowDefinitions="Auto,*">
+          <Grid ColumnDefinitions="*,Auto" Margin="16,13,14,6">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Text="历史记录" FontSize="13" FontWeight="SemiBold" />
+              <Border Classes="pill" Background="{DynamicResource SurfaceRaisedBrush}" Padding="7,1">
+                <TextBlock Text="{Binding TagCount}" FontSize="9.5"
+                           Foreground="{DynamicResource TextTertiaryBrush}" />
+              </Border>
+            </StackPanel>
+            <Border Grid.Column="1" Classes="pill" Background="{DynamicResource WarningSoftBrush}"
+                    Padding="7,2">
+              <StackPanel Orientation="Horizontal" Spacing="5">
+                <Ellipse Width="5" Height="5" Fill="{DynamicResource WarningBrush}"
+                         VerticalAlignment="Center" />
+                <TextBlock Text="{Binding CandidateCount, StringFormat='{}{0} 个候选'}" FontSize="9.5"
+                           Foreground="{DynamicResource WarningBrush}" />
+              </StackPanel>
+            </Border>
+          </Grid>
+
+          <ListBox Grid.Row="1" Classes="tags" ItemsSource="{Binding Rows}"
+                   SelectedItem="{Binding SelectedRow}" Margin="6,0,6,8">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Grid Height="58" ColumnDefinitions="Auto,*">
+                  <controls:TagGraphGutter Row="{Binding GraphRow}" Width="{Binding GutterWidth}"
+                                              Backdrop="{DynamicResource SurfaceBrush}" />
+                  <Grid Grid.Column="1" ColumnDefinitions="*,Auto" Margin="2,0,10,0"
+                        VerticalAlignment="Center">
+                    <StackPanel Spacing="4">
+                      <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="Medium"
+                                 TextTrimming="CharacterEllipsis" />
+                      <StackPanel Orientation="Horizontal" Spacing="9">
+                        <TextBlock Text="{Binding AddedText}" Classes="mono" FontSize="10"
+                                   Foreground="{DynamicResource SuccessBrush}" />
+                        <TextBlock Text="{Binding UpdatedText}" Classes="mono" FontSize="10"
+                                   Foreground="{DynamicResource WarningBrush}" />
+                        <TextBlock Text="{Binding RemovedText}" Classes="mono" FontSize="10"
+                                   Foreground="{DynamicResource DangerBrush}" />
+                        <TextBlock Text="{Binding OutputSummary}" Classes="mono" FontSize="10"
+                                   Foreground="{DynamicResource TextTertiaryBrush}" />
+                      </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Right"
+                                VerticalAlignment="Center">
+                      <Border Classes="pill status" Padding="7,2" HorizontalAlignment="Right"
+                              Classes.baseline="{Binding IsBaseline}"
+                              Classes.candidate="{Binding IsCandidate}"
+                              Classes.committed="{Binding IsCommitted}"
+                              Classes.removed="{Binding IsRemoved}">
+                        <TextBlock Text="{Binding StatusText}" FontSize="9.5" />
+                      </Border>
+                      <TextBlock Text="{Binding BuildTimeText}" Classes="mono" FontSize="9.5"
+                                 HorizontalAlignment="Right"
+                                 Foreground="{DynamicResource TextTertiaryBrush}" />
+                    </StackPanel>
+                  </Grid>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+
+      <!-- 详情 -->
+      <Border Grid.Column="2" Classes="card" Padding="0">
+        <Grid>
+
+          <Grid RowDefinitions="Auto,Auto,*" IsVisible="{Binding HasSelection}">
+            <StackPanel Margin="18,16,18,12" Spacing="11">
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="{Binding DetailName}" FontSize="17" FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis" />
+                <Border Classes="pill status" Padding="8,3"
+                        Classes.baseline="{Binding DetailIsBaseline}"
+                        Classes.candidate="{Binding DetailIsCandidate}"
+                        Classes.committed="{Binding DetailIsCommitted}"
+                        Classes.removed="{Binding DetailIsRemoved}">
+                  <TextBlock Text="{Binding DetailStatusText}" FontSize="10.5" />
+                </Border>
+              </StackPanel>
+
+              <StackPanel Spacing="5">
+                <Grid ColumnDefinitions="64,*">
+                  <TextBlock Classes="dim" FontSize="10.5" Text="Tag ID" />
+                  <TextBlock Grid.Column="1" Classes="mono" FontSize="10" Text="{Binding DetailTagId}" />
+                </Grid>
+                <Grid ColumnDefinitions="64,*">
+                  <TextBlock Classes="dim" FontSize="10.5" Text="父 Tag" />
+                  <TextBlock Grid.Column="1" Classes="mono" FontSize="10" Text="{Binding DetailParent}"
+                             TextTrimming="CharacterEllipsis" />
+                </Grid>
+                <Grid ColumnDefinitions="64,*">
+                  <TextBlock Classes="dim" FontSize="10.5" Text="构建时间" />
+                  <TextBlock Grid.Column="1" Classes="mono" FontSize="10" Text="{Binding DetailTime}" />
+                </Grid>
+              </StackPanel>
+
+              <Grid ColumnDefinitions="*,8,*,8,*">
+                <Border Grid.Column="0" Classes="inset" Padding="10,8">
+                  <StackPanel Spacing="1">
+                    <TextBlock Classes="dim" FontSize="10" Text="新增" />
+                    <TextBlock Text="{Binding DetailAdded}" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource SuccessBrush}" />
+                  </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Classes="inset" Padding="10,8">
+                  <StackPanel Spacing="1">
+                    <TextBlock Classes="dim" FontSize="10" Text="更新" />
+                    <TextBlock Text="{Binding DetailUpdated}" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource WarningBrush}" />
+                  </StackPanel>
+                </Border>
+                <Border Grid.Column="4" Classes="inset" Padding="10,8">
+                  <StackPanel Spacing="1">
+                    <TextBlock Classes="dim" FontSize="10" Text="删除" />
+                    <TextBlock Text="{Binding DetailRemoved}" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource DangerBrush}" />
+                  </StackPanel>
+                </Border>
+              </Grid>
+
+              <Border Classes="inset" Padding="10,8">
+                <StackPanel Spacing="3">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="dim" FontSize="10" Text="输出文件" />
+                    <TextBlock Grid.Column="1" Classes="dim" FontSize="9.5"
+                               Text="{Binding DetailOutputCount}" />
+                  </Grid>
+                  <TextBlock Classes="mono" FontSize="10" Text="{Binding DetailOutputs}"
+                             TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Classes="primary" Command="{Binding CommitCommand}" Padding="14,7">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <controls:IconPresenter Source="{x:Static ui:Icons.Commit}" Width="13" Height="13"
+                                            Stroke="#FFFFFF" />
+                    <TextBlock Text="提交为基线" FontSize="11.5" Foreground="#FFFFFF" />
+                  </StackPanel>
+                </Button>
+                <Button Classes="danger" Command="{Binding DiscardCommand}" Padding="12,7">
+                  <TextBlock Text="放弃候选" FontSize="11.5" Foreground="{DynamicResource DangerBrush}" />
+                </Button>
+                <Button Classes="ghost" Command="{Binding OpenOutputFolderCommand}" Padding="9,7"
+                        ToolTip.Tip="打开输出目录">
+                  <controls:IconPresenter Source="{x:Static ui:Icons.Folder}" Width="14" Height="14"
+                                          Stroke="{DynamicResource TextSecondaryBrush}" />
+                </Button>
+              </StackPanel>
+            </StackPanel>
+
+            <Border Grid.Row="1" Classes="divider" />
+
+            <Grid Grid.Row="2" RowDefinitions="Auto,*">
+              <Grid ColumnDefinitions="*,Auto" Margin="18,10,18,6">
+                <TextBlock Text="本次变更" FontSize="12" FontWeight="SemiBold" />
+                <TextBlock Grid.Column="1" Text="{Binding ChangesSummary}" FontSize="10.5"
+                           Foreground="{DynamicResource TextTertiaryBrush}" />
+              </Grid>
+
+              <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="10,0,10,6">
+                <ListBox Classes="rows" ItemsSource="{Binding SelectedChanges}">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="Auto,*" Margin="0,2.5">
+                        <Border Classes="badge" Width="18" Height="18" VerticalAlignment="Center"
+                                Classes.added="{Binding IsAdded}"
+                                Classes.updated="{Binding IsUpdated}"
+                                Classes.deleted="{Binding IsDeleted}">
+                          <TextBlock Text="{Binding Badge}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="9,0,0,0" Spacing="1">
+                          <TextBlock Text="{Binding Path}" Classes="mono" FontSize="10.5"
+                                     TextTrimming="CharacterEllipsis" />
+                          <TextBlock Text="{Binding Package}" FontSize="9.5"
+                                     Foreground="{DynamicResource TextTertiaryBrush}" />
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Button Grid.Row="1" Classes="subtle" HorizontalAlignment="Stretch" Margin="0,6,0,0"
+                        Padding="10,5" IsVisible="{Binding CanLoadMoreChanges}"
+                        Content="{Binding LoadMoreChangesText}" FontSize="10.5"
+                        Command="{Binding LoadMoreChangesCommand}" />
+              </Grid>
+            </Grid>
+          </Grid>
+
+          <StackPanel IsVisible="{Binding !HasSelection}" VerticalAlignment="Center"
+                      HorizontalAlignment="Center" Spacing="6">
+            <TextBlock Text="未选择构建记录" FontSize="12"
+                       Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+            <TextBlock Text="在左侧点选一个 Tag 查看详情" FontSize="10.5"
+                       Foreground="{DynamicResource TextTertiaryBrush}" HorizontalAlignment="Center" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+    <!-- 错误提示 -->
+    <controls:ErrorBanner Grid.RowSpan="3" ZIndex="5" VerticalAlignment="Bottom" Margin="0,0,0,4" />
+
+    <!-- 变更加载遮罩：读取期间屏蔽页面操作 -->
+    <controls:LoadingOverlay Grid.RowSpan="3" ZIndex="6" Message="正在读取变更记录…"
+                             IsVisible="{Binding IsLoadingChanges}" />
+  </Grid>
+</UserControl>

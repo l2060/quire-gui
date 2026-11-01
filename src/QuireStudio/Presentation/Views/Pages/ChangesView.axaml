@@ -1,0 +1,132 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:QuireStudio.Presentation"
+             xmlns:controls="using:QuireStudio.Presentation.Controls"
+             x:Class="QuireStudio.Presentation.Views.Pages.ChangesView">
+
+  <Grid RowDefinitions="Auto,Auto,*">
+
+    <!-- 页头 -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+      <StackPanel Spacing="5">
+        <TextBlock Classes="eyebrow" Text="DIFF" />
+        <TextBlock Classes="h1" Text="基线变更" />
+        <TextBlock Classes="subtitle" TextWrapping="Wrap" MaxWidth="600" HorizontalAlignment="Left"
+                   Text="比较当前源文件与已提交基线：新增、更新与被删除的资源会列出包内路径。" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+        <Button Classes="primary" Command="{Binding RefreshCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <controls:IconPresenter Source="{x:Static ui:Icons.Diff}" Width="14" Height="14"
+                                    Stroke="#FFFFFF" />
+            <TextBlock Text="计算差异" FontSize="12" Foreground="#FFFFFF" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Grid>
+
+    <!-- 汇总与筛选 -->
+    <Border Grid.Row="1" Classes="card" Padding="16,12" Margin="0,0,0,14">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="14">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Ellipse Width="6" Height="6" Fill="{DynamicResource SuccessBrush}" VerticalAlignment="Center" />
+            <TextBlock Text="新增" FontSize="10.5" Foreground="{DynamicResource TextTertiaryBrush}" />
+            <TextBlock Text="{Binding AddedCount}" FontSize="11.5" FontWeight="SemiBold"
+                       Foreground="{DynamicResource SuccessBrush}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Ellipse Width="6" Height="6" Fill="{DynamicResource WarningBrush}" VerticalAlignment="Center" />
+            <TextBlock Text="更新" FontSize="10.5" Foreground="{DynamicResource TextTertiaryBrush}" />
+            <TextBlock Text="{Binding UpdatedCount}" FontSize="11.5" FontWeight="SemiBold"
+                       Foreground="{DynamicResource WarningBrush}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Ellipse Width="6" Height="6" Fill="{DynamicResource DangerBrush}" VerticalAlignment="Center" />
+            <TextBlock Text="删除" FontSize="10.5" Foreground="{DynamicResource TextTertiaryBrush}" />
+            <TextBlock Text="{Binding DeletedCount}" FontSize="11.5" FontWeight="SemiBold"
+                       Foreground="{DynamicResource DangerBrush}" />
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+          <Button Classes="chip" Classes.active="{Binding IsFilterAll}" Content="全部"
+                  Command="{Binding SetFilterCommand}" CommandParameter="all" />
+          <Button Classes="chip" Classes.active="{Binding IsFilterAdded}" Content="新增"
+                  Command="{Binding SetFilterCommand}" CommandParameter="added" />
+          <Button Classes="chip" Classes.active="{Binding IsFilterUpdated}" Content="更新"
+                  Command="{Binding SetFilterCommand}" CommandParameter="updated" />
+          <Button Classes="chip" Classes.active="{Binding IsFilterDeleted}" Content="删除"
+                  Command="{Binding SetFilterCommand}" CommandParameter="deleted" />
+        </StackPanel>
+
+        <TextBox Grid.Column="2" Width="210" Watermark="筛选路径或包名…" Text="{Binding SearchText}" />
+      </Grid>
+    </Border>
+
+    <!-- 列表 -->
+    <Border Grid.Row="2" Classes="card" Padding="0">
+      <Grid>
+        <Grid RowDefinitions="Auto,*">
+          <Grid ColumnDefinitions="28,*,180,80" Margin="20,12,20,8">
+            <TextBlock Grid.Column="1" Classes="eyebrow" Text="PATH" />
+            <TextBlock Grid.Column="2" Classes="eyebrow" Text="PACKAGE" />
+            <TextBlock Grid.Column="3" Classes="eyebrow" Text="KIND" />
+          </Grid>
+
+          <Grid Grid.Row="1" RowDefinitions="*,Auto">
+            <ListBox Classes="rows" ItemsSource="{Binding Changes}">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Border Padding="20,7" BorderThickness="0,1,0,0"
+                          BorderBrush="{DynamicResource BorderSoftBrush}">
+                    <Grid ColumnDefinitions="28,*,180,80">
+                      <Border Classes="badge" Width="18" Height="18" VerticalAlignment="Center"
+                              Classes.added="{Binding IsAdded}"
+                              Classes.updated="{Binding IsUpdated}"
+                              Classes.deleted="{Binding IsDeleted}">
+                        <TextBlock Text="{Binding Badge}" />
+                      </Border>
+                      <TextBlock Grid.Column="1" Text="{Binding Path}" Classes="mono" FontSize="11"
+                                 VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Grid.Column="2" Text="{Binding Package}" FontSize="11"
+                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                 VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Grid.Column="3" Text="{Binding KindText}" FontSize="11"
+                                 Classes="kind" VerticalAlignment="Center"
+                                 Classes.added="{Binding IsAdded}"
+                                 Classes.updated="{Binding IsUpdated}"
+                                 Classes.deleted="{Binding IsDeleted}" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Border Grid.Row="1" Padding="20,8" BorderThickness="0,1,0,0"
+                    BorderBrush="{DynamicResource BorderSoftBrush}"
+                    IsVisible="{Binding CanLoadMoreChanges}">
+              <Button Classes="subtle" HorizontalAlignment="Stretch" Padding="10,5"
+                      Content="{Binding LoadMoreText}" FontSize="10.5"
+                      Command="{Binding LoadMoreCommand}" />
+            </Border>
+          </Grid>
+        </Grid>
+
+        <StackPanel IsVisible="{Binding !HasChanges}" VerticalAlignment="Center"
+                    HorizontalAlignment="Center" Spacing="6">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Diff}" Width="26" Height="26"
+                                  Stroke="{DynamicResource TextTertiaryBrush}" HorizontalAlignment="Center" />
+          <TextBlock Text="{Binding EmptyHint}" FontSize="11.5"
+                     Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <!-- 错误提示 -->
+    <controls:ErrorBanner Grid.RowSpan="3" ZIndex="5" VerticalAlignment="Bottom" Margin="0,0,0,4" />
+
+    <!-- 差异计算遮罩：计算期间屏蔽页面操作 -->
+    <controls:LoadingOverlay Grid.RowSpan="3" ZIndex="6" Message="正在计算差异…"
+                             IsVisible="{Binding IsBusy}" />
+  </Grid>
+</UserControl>

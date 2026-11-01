@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:QuireStudio.Presentation"
+             xmlns:controls="using:QuireStudio.Presentation.Controls"
+             x:Class="QuireStudio.Presentation.Views.Pages.KeysView">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- 页头 -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+      <StackPanel Spacing="5">
+        <TextBlock Classes="eyebrow" Text="SECRETS" />
+        <TextBlock Classes="h1" Text="密钥库" />
+        <TextBlock Classes="subtitle" TextWrapping="Wrap" MaxWidth="600" HorizontalAlignment="Left"
+                   Text="命名密钥保存在当前用户目录下，跨项目共享；YAML 只引用名称，密码不会落到项目里。" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+        <Button Classes="ghost" Command="{Binding RefreshCommand}" ToolTip.Tip="刷新">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Refresh}" Width="15" Height="15"
+                                  Stroke="{DynamicResource TextSecondaryBrush}" />
+        </Button>
+        <Button Classes="primary" Command="{Binding AddKeyCommand}" IsEnabled="{Binding CanAddKey}">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <controls:IconPresenter Source="{x:Static ui:Icons.Plus}" Width="14" Height="14"
+                                    Stroke="#FFFFFF" />
+            <TextBlock Text="添加密钥" FontSize="12" Foreground="#FFFFFF" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Grid>
+
+    <!-- 说明 + 卡片列表 -->
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel>
+
+        <Border CornerRadius="14" Background="{DynamicResource InfoSoftBrush}" BorderBrush="#1B3555"
+                BorderThickness="1" Padding="16,13" Margin="0,0,0,14">
+          <Grid ColumnDefinitions="Auto,*">
+            <controls:IconPresenter Source="{x:Static ui:Icons.Shield}" Width="18" Height="18"
+                                    Stroke="{DynamicResource InfoBrush}" VerticalAlignment="Top" />
+            <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="4">
+              <TextBlock Text="启用密钥后，打包使用 AES-256-GCM 加密并以 ECDSA P-256 签名" FontSize="12"
+                         FontWeight="Medium" />
+              <TextBlock FontSize="10.5" TextWrapping="Wrap"
+                         Foreground="{DynamicResource TextSecondaryBrush}"
+                         Text="客户端需要导出的 .key 文件；相同密码可在另一台机器重新派生同一密钥。打包时无需再次输入密码。" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <ItemsControl ItemsSource="{Binding Keys}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="card" Width="396" Margin="0,0,14,14" Padding="16,14">
+                <StackPanel Spacing="11">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Border Width="30" Height="30" CornerRadius="9" Background="{Binding Accent}">
+                      <TextBlock Text="{Binding Initial}" FontSize="12.5" FontWeight="SemiBold"
+                                 Foreground="#06080C" HorizontalAlignment="Center"
+                                 VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center"
+                                Spacing="2">
+                      <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
+                                 TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding ShortFingerprint}" Classes="mono" FontSize="9.5" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{Binding KeyLengthText}" FontSize="9.5"
+                               Foreground="{DynamicResource TextTertiaryBrush}"
+                               VerticalAlignment="Center" />
+                  </Grid>
+
+                  <Border Classes="inset" Padding="10,8">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="{Binding DisplayKey}" Classes="mono" FontSize="10"
+                                 TextWrapping="Wrap" VerticalAlignment="Center" />
+                      <Button Grid.Column="1" Classes="icon" Width="26" Height="26"
+                              Command="{Binding ToggleRevealCommand}" ToolTip.Tip="显示 / 隐藏"
+                              Margin="8,0,0,0">
+                        <controls:IconPresenter Source="{x:Static ui:Icons.Eye}" Width="14" Height="14"
+                                                Stroke="{DynamicResource TextTertiaryBrush}" />
+                      </Button>
+                    </Grid>
+                  </Border>
+
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Button Classes="subtle" Padding="10,4"
+                              Command="{Binding $parent[ItemsControl].DataContext.CopyKeyCommand}"
+                              CommandParameter="{Binding}">
+                        <TextBlock Text="复制" FontSize="11" />
+                      </Button>
+                      <Button Classes="subtle" Padding="10,4"
+                              Command="{Binding $parent[ItemsControl].DataContext.ExportKeyCommand}"
+                              CommandParameter="{Binding}">
+                        <TextBlock Text="导出" FontSize="11" />
+                      </Button>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                      <Button Classes="subtle" Padding="10,4" Command="{Binding RequestRemoveCommand}"
+                              IsVisible="{Binding !IsConfirmingRemoval}">
+                        <TextBlock Text="删除" FontSize="11"
+                                   Foreground="{DynamicResource TextTertiaryBrush}" />
+                      </Button>
+                      <StackPanel Orientation="Horizontal" Spacing="6"
+                                  IsVisible="{Binding IsConfirmingRemoval}">
+                        <Button Classes="danger" Padding="10,4"
+                                Command="{Binding $parent[ItemsControl].DataContext.RemoveKeyCommand}"
+                                CommandParameter="{Binding}">
+                          <TextBlock Text="确认删除" FontSize="11"
+                                     Foreground="{DynamicResource DangerBrush}" />
+                        </Button>
+                        <Button Classes="subtle" Padding="9,4" Command="{Binding CancelRemoveCommand}">
+                          <TextBlock Text="取消" FontSize="11" />
+                        </Button>
+                      </StackPanel>
+                    </StackPanel>
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <StackPanel IsVisible="{Binding !HasKeys}" VerticalAlignment="Center" Spacing="6"
+                    Margin="0,40,0,0">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Key}" Width="26" Height="26"
+                                  Stroke="{DynamicResource TextTertiaryBrush}"
+                                  HorizontalAlignment="Center" />
+          <TextBlock Text="还没有命名密钥" FontSize="11.5"
+                     Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+          <TextBlock Text="点击右上角「添加密钥」，在对话框中输入名称与密码"
+                     FontSize="10.5" Foreground="{DynamicResource TextTertiaryBrush}"
+                     HorizontalAlignment="Center" />
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- 错误提示 -->
+    <controls:ErrorBanner Grid.RowSpan="2" ZIndex="5" VerticalAlignment="Bottom" Margin="0,0,0,4" />
+  </Grid>
+</UserControl>

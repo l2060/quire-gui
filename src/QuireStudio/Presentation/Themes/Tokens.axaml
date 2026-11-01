@@ -1,0 +1,262 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!--
+    颜色按主题分组：暗色保持原有的深色表面语言，亮色用同一组键给出对等的浅色取值。
+    切换主题时 Avalonia 会重新解析所有 DynamicResource，无需重建界面。
+  -->
+  <ResourceDictionary.ThemeDictionaries>
+
+    <!-- ============================== 暗色 ============================== -->
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="AppBackgroundBrush" Color="#06080C" />
+      <SolidColorBrush x:Key="SurfaceBrush" Color="#101620" />
+      <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#171E2B" />
+      <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#1E2736" />
+      <SolidColorBrush x:Key="SurfaceSunkenBrush" Color="#0B1017" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#090D14" />
+
+      <SolidColorBrush x:Key="BorderBrush" Color="#26303F" />
+      <SolidColorBrush x:Key="BorderSoftBrush" Color="#222B3A" />
+      <SolidColorBrush x:Key="BorderStrongBrush" Color="#2B3446" />
+      <SolidColorBrush x:Key="BorderFocusBrush" Color="#4C5470" />
+
+      <SolidColorBrush x:Key="TextBrush" Color="#EDF1F9" />
+      <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9AA5BA" />
+      <SolidColorBrush x:Key="TextTertiaryBrush" Color="#626D82" />
+      <SolidColorBrush x:Key="TextInverseBrush" Color="#06080C" />
+      <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
+
+      <SolidColorBrush x:Key="AccentBrush" Color="#7C6BFF" />
+      <SolidColorBrush x:Key="AccentHoverBrush" Color="#8D7DFF" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#221E45" />
+      <SolidColorBrush x:Key="CyanBrush" Color="#35E3CE" />
+      <SolidColorBrush x:Key="SuccessBrush" Color="#3BD997" />
+      <SolidColorBrush x:Key="SuccessSoftBrush" Color="#0F2E24" />
+      <SolidColorBrush x:Key="WarningBrush" Color="#F5B740" />
+      <SolidColorBrush x:Key="WarningSoftBrush" Color="#332610" />
+      <SolidColorBrush x:Key="DangerBrush" Color="#FF5E7A" />
+      <SolidColorBrush x:Key="DangerSoftBrush" Color="#3A121D" />
+      <SolidColorBrush x:Key="InfoBrush" Color="#5AA9FF" />
+      <SolidColorBrush x:Key="InfoSoftBrush" Color="#10233A" />
+      <SolidColorBrush x:Key="DangerBorderBrush" Color="#4A1B28" />
+      <SolidColorBrush x:Key="DangerHoverBrush" Color="#4C1624" />
+      <SolidColorBrush x:Key="WarningBorderBrush" Color="#3A2C12" />
+
+      <SolidColorBrush x:Key="RowHoverBrush" Color="#0F141D" />
+      <SolidColorBrush x:Key="RowSelectedBrush" Color="#121826" />
+      <SolidColorBrush x:Key="ScrimBrush" Color="#C2030509" />
+      <BoxShadows x:Key="CardShadow">0 14 30 0 #66000000</BoxShadows>
+
+      <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#8B6BFF" />
+        <GradientStop Offset="1" Color="#2FD8E8" />
+      </LinearGradientBrush>
+
+      <LinearGradientBrush x:Key="PrimaryGradientBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#7B61FF" />
+        <GradientStop Offset="1" Color="#5B8DFF" />
+      </LinearGradientBrush>
+
+      <LinearGradientBrush x:Key="PrimaryGradientHoverBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#8C74FF" />
+        <GradientStop Offset="1" Color="#6E9CFF" />
+      </LinearGradientBrush>
+
+      <LinearGradientBrush x:Key="HeroGradientBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#151C2C" />
+        <GradientStop Offset="0.55" Color="#0F1420" />
+        <GradientStop Offset="1" Color="#0C1018" />
+      </LinearGradientBrush>
+
+      <LinearGradientBrush x:Key="SidebarGradientBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#0B0E15" />
+        <GradientStop Offset="1" Color="#080A10" />
+      </LinearGradientBrush>
+
+      <!-- Fluent 内置控件 -->
+      <SolidColorBrush x:Key="TextControlBackground" Color="#121722" />
+      <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#161D29" />
+      <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#161D29" />
+      <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#0D1118" />
+      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#1C2332" />
+      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#2B3446" />
+      <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#7C6BFF" />
+      <SolidColorBrush x:Key="TextControlForeground" Color="#EDF1F9" />
+      <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#EDF1F9" />
+      <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#EDF1F9" />
+      <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="#626D82" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#4E5769" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#5C6579" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#6B7488" />
+      <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#4C3FCF" />
+
+      <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#121722" />
+      <SolidColorBrush x:Key="FlyoutPresenterBorderBrush" Color="#1C2332" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#121722" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#1C2332" />
+
+      <SolidColorBrush x:Key="ComboBoxBackground" Color="#121722" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#18202D" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#18202D" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="#0D1118" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#1C2332" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#2B3446" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#7C6BFF" />
+      <SolidColorBrush x:Key="ComboBoxForeground" Color="#EDF1F9" />
+      <SolidColorBrush x:Key="ComboBoxForegroundPointerOver" Color="#EDF1F9" />
+      <SolidColorBrush x:Key="ComboBoxForegroundPressed" Color="#EDF1F9" />
+      <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="#626D82" />
+      <SolidColorBrush x:Key="ComboBoxPlaceholderForeground" Color="#4E5769" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#121722" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#1C2332" />
+      <SolidColorBrush x:Key="ComboBoxDropDownForeground" Color="#EDF1F9" />
+      <SolidColorBrush x:Key="ComboBoxDropDownSeparatorBrush" Color="#1C2332" />
+      <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#C8D0E0" />
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#EDF1F9" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#18202D" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#221E45" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#2A2554" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed" Color="#2A2554" />
+
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#161D29" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#2B3446" />
+      <SolidColorBrush x:Key="ToolTipForeground" Color="#C8D0E0" />
+
+      <SolidColorBrush x:Key="ProgressBarForeground" Color="#7C6BFF" />
+      <SolidColorBrush x:Key="ProgressBarBackground" Color="#1C2332" />
+    </ResourceDictionary>
+
+    <!-- ============================== 亮色 ============================== -->
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F5F6FA" />
+      <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#EEF1F7" />
+      <SolidColorBrush x:Key="SurfaceSunkenBrush" Color="#F0F2F8" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#F1F3F9" />
+
+      <SolidColorBrush x:Key="BorderBrush" Color="#E1E5EF" />
+      <SolidColorBrush x:Key="BorderSoftBrush" Color="#EEF1F6" />
+      <SolidColorBrush x:Key="BorderStrongBrush" Color="#C9D0DE" />
+      <SolidColorBrush x:Key="BorderFocusBrush" Color="#A8B1C5" />
+
+      <SolidColorBrush x:Key="TextBrush" Color="#0D1220" />
+      <SolidColorBrush x:Key="TextSecondaryBrush" Color="#495468" />
+      <SolidColorBrush x:Key="TextTertiaryBrush" Color="#79839A" />
+      <SolidColorBrush x:Key="TextInverseBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
+
+      <SolidColorBrush x:Key="AccentBrush" Color="#6350E0" />
+      <SolidColorBrush x:Key="AccentHoverBrush" Color="#5443CC" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#ECE9FD" />
+      <SolidColorBrush x:Key="CyanBrush" Color="#0EA5A0" />
+      <SolidColorBrush x:Key="SuccessBrush" Color="#0E9468" />
+      <SolidColorBrush x:Key="SuccessSoftBrush" Color="#E1F5EC" />
+      <SolidColorBrush x:Key="WarningBrush" Color="#B0740B" />
+      <SolidColorBrush x:Key="WarningSoftBrush" Color="#FCEFD9" />
+      <SolidColorBrush x:Key="DangerBrush" Color="#D3354F" />
+      <SolidColorBrush x:Key="DangerSoftBrush" Color="#FBE6EA" />
+      <SolidColorBrush x:Key="InfoBrush" Color="#2A76D2" />
+      <SolidColorBrush x:Key="InfoSoftBrush" Color="#E5F0FD" />
+      <SolidColorBrush x:Key="DangerBorderBrush" Color="#F2C6D0" />
+      <SolidColorBrush x:Key="DangerHoverBrush" Color="#F7D6DE" />
+      <SolidColorBrush x:Key="WarningBorderBrush" Color="#F0DBAE" />
+
+      <SolidColorBrush x:Key="RowHoverBrush" Color="#F5F7FB" />
+      <SolidColorBrush x:Key="RowSelectedBrush" Color="#F0EDFD" />
+      <SolidColorBrush x:Key="ScrimBrush" Color="#660B1018" />
+      <BoxShadows x:Key="CardShadow">0 8 22 0 #14000000</BoxShadows>
+
+      <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#7A5FF0" />
+        <GradientStop Offset="1" Color="#22B8D8" />
+      </LinearGradientBrush>
+
+      <LinearGradientBrush x:Key="PrimaryGradientBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#6A55EE" />
+        <GradientStop Offset="1" Color="#4C82F0" />
+      </LinearGradientBrush>
+
+      <LinearGradientBrush x:Key="PrimaryGradientHoverBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#5C46E6" />
+        <GradientStop Offset="1" Color="#3D74E8" />
+      </LinearGradientBrush>
+
+      <LinearGradientBrush x:Key="HeroGradientBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#FFFFFF" />
+        <GradientStop Offset="0.55" Color="#F4F6FC" />
+        <GradientStop Offset="1" Color="#EBEFF8" />
+      </LinearGradientBrush>
+
+      <LinearGradientBrush x:Key="SidebarGradientBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#F6F8FC" />
+        <GradientStop Offset="1" Color="#EEF1F8" />
+      </LinearGradientBrush>
+
+      <!-- Fluent 内置控件 -->
+      <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#F7F8FC" />
+      <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#F1F3F7" />
+      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#E1E5EF" />
+      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#C9D0DE" />
+      <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#6350E0" />
+      <SolidColorBrush x:Key="TextControlForeground" Color="#0D1220" />
+      <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#0D1220" />
+      <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#0D1220" />
+      <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="#8A93A6" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#9AA2B4" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#8D96A9" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#7C869A" />
+      <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#C9BEFB" />
+
+      <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="FlyoutPresenterBorderBrush" Color="#E1E5EF" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#E1E5EF" />
+
+      <SolidColorBrush x:Key="ComboBoxBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#F5F7FB" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#F5F7FB" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="#F1F3F7" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#E1E5EF" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#C9D0DE" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#6350E0" />
+      <SolidColorBrush x:Key="ComboBoxForeground" Color="#0D1220" />
+      <SolidColorBrush x:Key="ComboBoxForegroundPointerOver" Color="#0D1220" />
+      <SolidColorBrush x:Key="ComboBoxForegroundPressed" Color="#0D1220" />
+      <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="#8A93A6" />
+      <SolidColorBrush x:Key="ComboBoxPlaceholderForeground" Color="#9AA2B4" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#E1E5EF" />
+      <SolidColorBrush x:Key="ComboBoxDropDownForeground" Color="#0D1220" />
+      <SolidColorBrush x:Key="ComboBoxDropDownSeparatorBrush" Color="#EEF1F6" />
+      <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#495468" />
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#2C1E7A" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#F0F2F8" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#ECE9FD" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#E3DEFC" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed" Color="#E3DEFC" />
+
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#D7DCE7" />
+      <SolidColorBrush x:Key="ToolTipForeground" Color="#2A3242" />
+
+      <SolidColorBrush x:Key="ProgressBarForeground" Color="#6350E0" />
+      <SolidColorBrush x:Key="ProgressBarBackground" Color="#E5E9F2" />
+    </ResourceDictionary>
+
+  </ResourceDictionary.ThemeDictionaries>
+
+  <!-- ===================== 与主题无关 ===================== -->
+  <CornerRadius x:Key="RadiusXs">6</CornerRadius>
+  <CornerRadius x:Key="RadiusSm">8</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">10</CornerRadius>
+  <CornerRadius x:Key="RadiusLg">14</CornerRadius>
+  <CornerRadius x:Key="RadiusXl">18</CornerRadius>
+
+  <FontFamily x:Key="UiFont">Inter, Microsoft YaHei UI, PingFang SC, Noto Sans SC, Segoe UI</FontFamily>
+  <FontFamily x:Key="MonoFont">Cascadia Mono, JetBrains Mono, Consolas, Menlo, monospace</FontFamily>
+
+</ResourceDictionary>

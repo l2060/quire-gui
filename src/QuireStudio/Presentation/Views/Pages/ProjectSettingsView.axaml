@@ -1,0 +1,296 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:QuireStudio.Presentation"
+             xmlns:controls="using:QuireStudio.Presentation.Controls"
+             x:Class="QuireStudio.Presentation.Views.Pages.ProjectSettingsView">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- 页头 -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+      <StackPanel Spacing="5">
+        <TextBlock Classes="eyebrow" Text="PROJECT" />
+        <TextBlock Classes="h1" Text="项目设置" />
+        <TextBlock Classes="subtitle" TextWrapping="Wrap" MaxWidth="640" HorizontalAlignment="Left"
+                   Text="项目参数直接写回配置文件；资源目录只保存在工作区，打包与差异时以 -root 传入，不写进 YAML。" />
+      </StackPanel>
+
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+        <Ellipse Width="6" Height="6" Fill="{DynamicResource WarningBrush}" VerticalAlignment="Center"
+                 IsVisible="{Binding HasUnsavedChanges}" ToolTip.Tip="有未保存的更改" />
+        <Button Classes="ghost" Padding="13,7" Content="重新载入" FontSize="11.5"
+                Command="{Binding ReloadProjectCommand}" />
+        <Button Classes="primary" Padding="15,7" Command="{Binding SaveProjectCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <controls:IconPresenter Source="{x:Static ui:Icons.Check}" Width="13" Height="13"
+                                    Stroke="#FFFFFF" />
+            <TextBlock Text="保存项目设置" FontSize="11.5" Foreground="#FFFFFF" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Grid>
+
+    <!-- 主体：左侧表单 + 右侧发布链路 -->
+    <Grid Grid.Row="1" ColumnDefinitions="*,340">
+
+      <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="12" Margin="0,0,14,0">
+
+          <!-- 统计 -->
+          <Grid ColumnDefinitions="*,*,*,*">
+            <Border Grid.Column="0" Classes="card" Padding="14,11">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="dim" FontSize="9.5" Text="发布记录" />
+                <TextBlock Text="{Binding TagCount}" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock FontSize="9.5" Foreground="{DynamicResource WarningBrush}"
+                           Text="{Binding CandidateCount, StringFormat='{}{0} 个候选待提交'}" />
+              </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Classes="card" Padding="14,11" Margin="10,0,0,0">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="dim" FontSize="9.5" Text="当前基线" />
+                <TextBlock Text="{Binding BaselineName}" FontSize="15" FontWeight="SemiBold"
+                           Classes="mono" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding BaselineHint}" FontSize="9.5"
+                           Foreground="{DynamicResource TextTertiaryBrush}"
+                           TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Classes="card" Padding="14,11" Margin="10,0,0,0">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="dim" FontSize="9.5" Text="资源包" />
+                <TextBlock Text="{Binding PackageCount}" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding SourceSummary}" FontSize="9.5"
+                           Foreground="{DynamicResource TextTertiaryBrush}"
+                           TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </Border>
+            <Border Grid.Column="3" Classes="card" Padding="14,11" Margin="10,0,0,0">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="dim" FontSize="9.5" Text="加密" />
+                <TextBlock Text="{Binding SecretKey}" FontSize="15" FontWeight="SemiBold"
+                           Classes="mono" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding Compression, StringFormat='压缩 {0}'}" FontSize="9.5"
+                           Foreground="{DynamicResource TextTertiaryBrush}" />
+              </StackPanel>
+            </Border>
+          </Grid>
+
+          <!-- 项目 -->
+          <Border Classes="card" Padding="18,15">
+            <StackPanel Spacing="12">
+              <TextBlock Text="项目" FontSize="13" FontWeight="SemiBold" />
+
+              <Grid ColumnDefinitions="86,*" RowDefinitions="Auto,10,Auto,10,Auto">
+                <TextBlock Text="项目名称" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+                <TextBox Grid.Column="1" Text="{Binding ProjectName}" Watermark="例如 demo-game" />
+
+                <TextBlock Grid.Row="2" Text="输出目录" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+                <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto">
+                  <TextBox Text="{Binding OutputPath}" Classes="mono" Watermark="./dist/{tag}" />
+                  <Button Grid.Column="1" Classes="ghost" Padding="12,6" Margin="8,0,0,0"
+                          Content="浏览" FontSize="11" ToolTip.Tip="选择一个输出目录（保留 {tag} 占位符）"
+                          Command="{Binding BrowseOutputPathCommand}" />
+                </Grid>
+
+                <TextBlock Grid.Row="4" Text="配置文件" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+                <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,Auto">
+                  <Border Classes="inset" Padding="10,6">
+                    <TextBlock Text="{Binding ConfigPath}" Classes="mono" FontSize="10.5"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip.Tip="{Binding ConfigPath}" />
+                  </Border>
+                  <Button Grid.Column="1" Classes="ghost" Padding="10,6" Margin="8,0,0,0"
+                          Command="{Binding RevealConfigFileCommand}" ToolTip.Tip="在资源管理器中定位配置文件">
+                    <controls:IconPresenter Source="{x:Static ui:Icons.Folder}" Width="13" Height="13"
+                                            Stroke="{DynamicResource TextSecondaryBrush}" />
+                  </Button>
+                </Grid>
+              </Grid>
+
+              <TextBlock FontSize="10" TextWrapping="Wrap" IsVisible="{Binding HasConfigurationError}"
+                         Foreground="{DynamicResource DangerBrush}"
+                         Text="{Binding ConfigurationError}" />
+            </StackPanel>
+          </Border>
+
+          <!-- 资源目录 -->
+          <Border Classes="card" Padding="18,15">
+            <StackPanel Spacing="10">
+              <StackPanel Spacing="3">
+                <TextBlock Text="资源目录" FontSize="13" FontWeight="SemiBold" />
+                <TextBlock FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"
+                           TextWrapping="Wrap"
+                           Text="只保存在工作区登记表里；打包与差异时通过 -root 传递，不会写入配置文件。" />
+              </StackPanel>
+
+              <Grid ColumnDefinitions="86,*,Auto">
+                <TextBlock Text="根目录" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+                <TextBox Grid.Column="1" Text="{Binding ResourceRoot}" Classes="mono"
+                         Watermark="留空表示跟随配置文件目录" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="8,0,0,0">
+                  <Button Classes="ghost" Padding="12,6" Content="浏览" FontSize="11"
+                          Command="{Binding BrowseResourceRootCommand}" />
+                  <Button Classes="subtle" Padding="12,6" Content="清除" FontSize="11"
+                          Command="{Binding ClearResourceRootCommand}" />
+                </StackPanel>
+              </Grid>
+
+              <TextBlock FontSize="10" Text="{Binding ResourceRootHint}"
+                         Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+
+          <!-- 打包设置 -->
+          <Border Classes="card" Padding="18,15">
+            <StackPanel Spacing="12">
+              <StackPanel Spacing="3">
+                <TextBlock Text="打包设置" FontSize="13" FontWeight="SemiBold" />
+                <TextBlock FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"
+                           TextWrapping="Wrap"
+                           Text="写入配置文件的 build.jobs、suffix、compression、compression-policy 与 secret-key；每个项目各自独立。" />
+              </StackPanel>
+
+              <Grid ColumnDefinitions="86,*" RowDefinitions="Auto,10,Auto,10,Auto,10,Auto,10,Auto">
+                <TextBlock Text="线程数" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+                <Grid Grid.Column="1" ColumnDefinitions="Auto,*">
+                  <TextBox Text="{Binding JobsText}" Width="92" Watermark="自动" />
+                  <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="10"
+                             Foreground="{DynamicResource TextTertiaryBrush}"
+                             Text="对应 build.jobs；留空或 0 表示由 CLI 自动决定" />
+                </Grid>
+
+                <TextBlock Grid.Row="2" Text="包后缀" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+                <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="Auto,*">
+                  <TextBox Text="{Binding Suffix}" Width="120" Classes="mono" Watermark="asset" />
+                  <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="10"
+                             Foreground="{DynamicResource TextTertiaryBrush}"
+                             Text="输出文件扩展名，例如 demo.asset" />
+                </Grid>
+
+                <TextBlock Grid.Row="4" Text="默认压缩" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+                <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="Auto,*">
+                  <ComboBox ItemsSource="{Binding CompressionOptions}" SelectedItem="{Binding Compression}"
+                            Width="140" />
+                  <TextBlock Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="10"
+                             Foreground="{DynamicResource TextTertiaryBrush}"
+                             Text="对应 compression；资源包内的单独设置优先" />
+                </Grid>
+
+                <TextBlock Grid.Row="6" Text="压缩策略" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+                <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="Auto,*">
+                  <ComboBox ItemsSource="{Binding CompressionPolicyOptions}"
+                            SelectedItem="{Binding SelectedCompressionPolicy}" Width="240" />
+                  <TextBlock Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="10"
+                             Foreground="{DynamicResource TextTertiaryBrush}"
+                             Text="「自适应」会跳过压缩收益不大的文件，适合已压缩过的资源" />
+                </Grid>
+
+                <TextBlock Grid.Row="8" Text="密钥" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+                <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="Auto,*,Auto">
+                  <ComboBox ItemsSource="{Binding SecretKeyOptions}" SelectedItem="{Binding SecretKey}"
+                            Width="200" PlaceholderText="none" />
+                  <TextBlock Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="10"
+                             Foreground="{DynamicResource TextTertiaryBrush}"
+                             Text="选择 none 表示打包不加密、不签名" />
+                  <Button Grid.Column="2" Classes="ghost" Padding="10,6" Content="新建密钥…"
+                          FontSize="10.5" Command="{Binding CreateKeyCommand}" />
+                </Grid>
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- 移除项目 -->
+          <Border Classes="card" Padding="18,15">
+            <StackPanel Spacing="10">
+              <StackPanel Spacing="3">
+                <TextBlock Text="从 GUI 移除项目" FontSize="13" FontWeight="SemiBold"
+                           Foreground="{DynamicResource DangerBrush}" />
+                <TextBlock FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"
+                           Text="只删除登记记录，不会删除磁盘上的配置文件、资源或构建状态。" />
+              </StackPanel>
+
+              <Button Classes="danger" HorizontalAlignment="Left" Padding="14,7" Content="移除项目"
+                      FontSize="11.5" IsVisible="{Binding !IsConfirmingRemoval}"
+                      Command="{Binding RequestRemoveCommand}" />
+
+              <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsConfirmingRemoval}">
+                <Button Classes="danger" Padding="14,7" Content="确认移除" FontSize="11.5"
+                        Command="{Binding ConfirmRemoveCommand}" />
+                <Button Classes="ghost" Padding="14,7" Content="取消" FontSize="11.5"
+                        Command="{Binding CancelRemoveCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- 发布链路 -->
+      <Border Grid.Column="1" Classes="card" Padding="0">
+        <Grid RowDefinitions="Auto,Auto,*">
+          <Grid ColumnDefinitions="*,Auto" Margin="16,13,14,8">
+            <TextBlock Text="发布链路" FontSize="13" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="1" FontSize="10" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextTertiaryBrush}"
+                       Text="{Binding TagCount, StringFormat='{}{0} 条'}" />
+          </Grid>
+
+          <Border Grid.Row="1" Classes="divider" />
+
+          <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" Padding="4,4,4,8">
+            <ItemsControl ItemsSource="{Binding GraphRows}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Height="58" ColumnDefinitions="Auto,*">
+                    <controls:TagGraphGutter Row="{Binding GraphRow}" Width="{Binding GutterWidth}"
+                                              Backdrop="{DynamicResource SurfaceBrush}" />
+                    <Grid Grid.Column="1" ColumnDefinitions="*,Auto" Margin="2,0,10,0"
+                          VerticalAlignment="Center">
+                      <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding Name}" FontSize="11.5" FontWeight="Medium"
+                                   TextTrimming="CharacterEllipsis" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <TextBlock Text="{Binding AddedText}" Classes="mono" FontSize="9.5"
+                                     Foreground="{DynamicResource SuccessBrush}" />
+                          <TextBlock Text="{Binding UpdatedText}" Classes="mono" FontSize="9.5"
+                                     Foreground="{DynamicResource WarningBrush}" />
+                          <TextBlock Text="{Binding RemovedText}" Classes="mono" FontSize="9.5"
+                                     Foreground="{DynamicResource DangerBrush}" />
+                        </StackPanel>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" Spacing="3" HorizontalAlignment="Right"
+                                  VerticalAlignment="Center">
+                        <Border Classes="pill status" Padding="6,1" HorizontalAlignment="Right"
+                                Classes.baseline="{Binding IsBaseline}"
+                                Classes.candidate="{Binding IsCandidate}"
+                                Classes.committed="{Binding IsCommitted}"
+                                Classes.removed="{Binding IsRemoved}">
+                          <TextBlock Text="{Binding StatusText}" FontSize="9" />
+                        </Border>
+                        <TextBlock Text="{Binding BuildTimeText}" Classes="mono" FontSize="9"
+                                   HorizontalAlignment="Right"
+                                   Foreground="{DynamicResource TextTertiaryBrush}" />
+                      </StackPanel>
+                    </Grid>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+
+          <StackPanel Grid.Row="2" IsVisible="{Binding !HasTags}" VerticalAlignment="Center"
+                      HorizontalAlignment="Center" Spacing="6" Margin="20">
+            <TextBlock Text="还没有发布记录" FontSize="11.5"
+                       Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+            <TextBlock Text="在「打包分支」里打包一次即可生成" FontSize="10"
+                       Foreground="{DynamicResource TextTertiaryBrush}" HorizontalAlignment="Center"
+                       TextAlignment="Center" TextWrapping="Wrap" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- 错误提示 -->
+    <controls:ErrorBanner Grid.RowSpan="2" ZIndex="5" VerticalAlignment="Bottom" Margin="0,0,0,4" />
+  </Grid>
+</UserControl>

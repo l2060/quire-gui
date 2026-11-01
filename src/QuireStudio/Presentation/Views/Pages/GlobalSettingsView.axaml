@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:QuireStudio.Presentation"
+             xmlns:controls="using:QuireStudio.Presentation.Controls"
+             x:Class="QuireStudio.Presentation.Views.Pages.GlobalSettingsView">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- 页头 -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+      <StackPanel Spacing="5">
+        <TextBlock Classes="eyebrow" Text="SYSTEM" />
+        <TextBlock Classes="h1" Text="全局设置" />
+        <TextBlock Classes="subtitle" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"
+                   Text="本地命令行组件与系统集成。工作区切换在左上角的项目菜单里，打包参数在「项目设置」中。" />
+      </StackPanel>
+    </Grid>
+
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Spacing="14" MaxWidth="980" HorizontalAlignment="Left">
+
+        <!-- quire-cli -->
+        <Border Classes="card" Padding="18,16">
+          <StackPanel Spacing="13">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Spacing="3">
+                <TextBlock Text="quire-cli" FontSize="13" FontWeight="SemiBold" />
+                <TextBlock FontSize="10.5" Foreground="{DynamicResource TextTertiaryBrush}"
+                           TextWrapping="Wrap"
+                           Text="GUI 通过子进程调用 CLI，并读取 -progress 的结构化事件；留空时自动探测 PATH 与 .NET 全局工具目录。" />
+              </StackPanel>
+              <Border Grid.Column="1" Classes="pill" Padding="9,3" VerticalAlignment="Center" Background="{DynamicResource SurfaceRaisedBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Ellipse Width="6" Height="6" VerticalAlignment="Center"
+                           Fill="{Binding CliStatusBrush}" />
+                  <TextBlock Text="{Binding CliStatusText}" FontSize="10.5" />
+                </StackPanel>
+              </Border>
+            </Grid>
+
+            <Grid ColumnDefinitions="92,*,Auto">
+              <TextBlock Text="可执行文件" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+              <TextBox Grid.Column="1" Classes="mono" Text="{Binding CliPath}" Watermark="自动探测" />
+              <Button Grid.Column="2" Classes="ghost" Content="应用并检测" Margin="8,0,0,0"
+                      Command="{Binding RecheckCliCommand}" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- 资源管理器集成 -->
+        <Border Classes="card" Padding="18,16" IsVisible="{Binding ShellSupported}">
+          <StackPanel Spacing="12">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Spacing="3">
+                <TextBlock Text="资源管理器集成" FontSize="13" FontWeight="SemiBold" />
+                <TextBlock FontSize="10.5" Foreground="{DynamicResource TextTertiaryBrush}"
+                           TextWrapping="Wrap"
+                           Text="在资源管理器中右键文件夹（或文件夹空白处）选择「在 Quire Studio 中打开」，即可把该目录作为工作区启动。只写入当前用户注册表，无需管理员权限。" />
+              </StackPanel>
+              <Border Grid.Column="1" Classes="pill" Padding="9,3" VerticalAlignment="Top" Background="{DynamicResource SurfaceRaisedBrush}">
+                <TextBlock Text="{Binding ShellStatusText}" FontSize="10.5" />
+              </Border>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Classes="ghost" Content="注册右键菜单" Command="{Binding InstallShellCommand}"
+                      IsVisible="{Binding !ShellInstalled}" />
+              <Button Classes="danger" Content="移除右键菜单" Command="{Binding RemoveShellCommand}"
+                      IsVisible="{Binding ShellInstalled}" />
+              <TextBlock Text="{Binding SaveHint}" FontSize="10.5" VerticalAlignment="Center"
+                         Foreground="{DynamicResource SuccessBrush}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- 应用数据 -->
+        <Border Classes="card" Padding="18,16">
+          <StackPanel Spacing="10">
+            <StackPanel Spacing="3">
+              <TextBlock Text="应用数据目录" FontSize="13" FontWeight="SemiBold" />
+              <TextBlock FontSize="10.5" Foreground="{DynamicResource TextTertiaryBrush}"
+                         Text="仅保存全局设置 settings.json，与工作区分离；可用 QUIRESTUDIO_HOME 整体迁移。" />
+            </StackPanel>
+            <Grid ColumnDefinitions="92,*,Auto">
+              <TextBlock Text="目录" FontSize="11" Classes="dim" VerticalAlignment="Center" />
+              <Border Grid.Column="1" Classes="inset" Padding="10,7">
+                <TextBlock Text="{Binding AppDataDirectory}" Classes="mono" FontSize="10.5"
+                           TextTrimming="CharacterEllipsis" />
+              </Border>
+              <Button Grid.Column="2" Classes="ghost" Content="打开" Margin="8,0,0,0"
+                      Command="{Binding OpenAppDataFolderCommand}" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- 错误提示 -->
+    <controls:ErrorBanner Grid.RowSpan="2" ZIndex="5" VerticalAlignment="Bottom" Margin="0,0,0,4" />
+  </Grid>
+</UserControl>

@@ -1,0 +1,432 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:QuireStudio.Presentation"
+        xmlns:controls="using:QuireStudio.Presentation.Controls"
+        x:Class="QuireStudio.Presentation.Views.MainWindow"
+        Title="{Binding WindowTitle}"
+        Icon="/Assets/window-icon.png"
+        Width="1460"
+        Height="920"
+        MinWidth="1120"
+        MinHeight="700"
+        Background="{DynamicResource AppBackgroundBrush}"
+        FontFamily="{DynamicResource UiFont}"
+        FontSize="12.5"
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="F5" Command="{Binding RefreshCommand}" />
+    <KeyBinding Gesture="Escape" Command="{Binding CloseProjectMenuCommand}" />
+  </Window.KeyBindings>
+
+  <Grid RowDefinitions="46,Auto,*">
+
+    <!-- ================= 自绘标题栏 ================= -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Background="Transparent"
+          PointerPressed="OnTitleBarPointerPressed">
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0" Spacing="9">
+        <Image Source="/Assets/window-icon.png" Width="24" Height="24" VerticalAlignment="Center"
+               RenderOptions.BitmapInterpolationMode="HighQuality" />
+        <TextBlock Text="QUIRE" FontSize="11" FontWeight="Bold" LetterSpacing="2.4" VerticalAlignment="Center" />
+        <TextBlock Text="STUDIO" FontSize="10.5" FontWeight="Medium" LetterSpacing="2.4"
+                   Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"
+                   Margin="-4,0,0,0" />
+        <Border Width="1" Height="15" Background="{DynamicResource BorderBrush}" Margin="4,0,4,0" />
+        <TextBlock Text="{Binding WorkspaceTitle}" Classes="mono" FontSize="10.5"
+                   VerticalAlignment="Center" MaxWidth="330" TextTrimming="CharacterEllipsis"
+                   Foreground="{DynamicResource TextTertiaryBrush}"
+                   ToolTip.Tip="{Binding WorkspaceDirectory}" />
+        <controls:IconPresenter Source="{x:Static ui:Icons.ChevronRight}" Width="10" Height="10"
+                                Stroke="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding ConfigFileTitle}" Classes="mono" FontSize="10.5"
+                   VerticalAlignment="Center" MaxWidth="300" TextTrimming="CharacterEllipsis"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   IsVisible="{Binding HasConfigFile}"
+                   ToolTip.Tip="{Binding ProjectFilePath}" />
+        <TextBlock Text="未选择项目" Classes="mono" FontSize="10.5" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextTertiaryBrush}"
+                   IsVisible="{Binding !HasConfigFile}" />
+      </StackPanel>
+
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center"
+                  Margin="0,0,10,0">
+        <!-- 主题切换 -->
+        <Button Classes="caption" ToolTip.Tip="{Binding ThemeLabel}">
+          <Button.Flyout>
+            <Flyout Placement="BottomEdgeAlignedRight">
+              <StackPanel Width="184" Spacing="2">
+                <TextBlock Classes="eyebrow" Text="界面主题" Margin="8,2,8,6" />
+
+                <Button Classes="plain" HorizontalContentAlignment="Stretch" Padding="8,6" CornerRadius="8"
+                        Command="{Binding SetThemeCommand}" CommandParameter="light">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <controls:IconPresenter Source="{x:Static ui:Icons.Sun}" Width="14" Height="14"
+                                            Stroke="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock Grid.Column="1" Text="亮色" FontSize="12" Margin="10,0,0,0"
+                               VerticalAlignment="Center" />
+                    <controls:IconPresenter Grid.Column="2" Source="{x:Static ui:Icons.Check}"
+                                            Width="13" Height="13"
+                                            Stroke="{DynamicResource SuccessBrush}"
+                                            IsVisible="{Binding IsThemeLight}" />
+                  </Grid>
+                </Button>
+
+                <Button Classes="plain" HorizontalContentAlignment="Stretch" Padding="8,6" CornerRadius="8"
+                        Command="{Binding SetThemeCommand}" CommandParameter="dark">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <controls:IconPresenter Source="{x:Static ui:Icons.Moon}" Width="14" Height="14"
+                                            Stroke="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock Grid.Column="1" Text="暗色" FontSize="12" Margin="10,0,0,0"
+                               VerticalAlignment="Center" />
+                    <controls:IconPresenter Grid.Column="2" Source="{x:Static ui:Icons.Check}"
+                                            Width="13" Height="13"
+                                            Stroke="{DynamicResource SuccessBrush}"
+                                            IsVisible="{Binding IsThemeDark}" />
+                  </Grid>
+                </Button>
+
+                <Button Classes="plain" HorizontalContentAlignment="Stretch" Padding="8,6" CornerRadius="8"
+                        Command="{Binding SetThemeCommand}" CommandParameter="system">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <controls:IconPresenter Source="{x:Static ui:Icons.Monitor}" Width="14" Height="14"
+                                            Stroke="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock Grid.Column="1" Text="跟随系统" FontSize="12" Margin="10,0,0,0"
+                               VerticalAlignment="Center" />
+                    <controls:IconPresenter Grid.Column="2" Source="{x:Static ui:Icons.Check}"
+                                            Width="13" Height="13"
+                                            Stroke="{DynamicResource SuccessBrush}"
+                                            IsVisible="{Binding IsThemeSystem}" />
+                  </Grid>
+                </Button>
+              </StackPanel>
+            </Flyout>
+          </Button.Flyout>
+
+          <controls:IconPresenter Source="{Binding ThemeIcon}" Width="14" Height="14"
+                                  Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.8" />
+        </Button>
+        <Button Classes="caption" Click="OnMinimizeClick" ToolTip.Tip="最小化">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Minimize}" Width="12" Height="12"
+                                  Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="2" />
+        </Button>
+        <Button Classes="caption" Click="OnMaximizeClick" ToolTip.Tip="最大化 / 还原">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Maximize}" Width="11" Height="11"
+                                  Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.8" />
+        </Button>
+        <Button Classes="caption close" Click="OnCloseClick" ToolTip.Tip="关闭">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Close}" Width="12" Height="12"
+                                  Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.9" />
+        </Button>
+      </StackPanel>
+    </Grid>
+
+    <!-- ================= 常驻提示（环境问题） ================= -->
+    <Border Grid.Row="1" IsVisible="{Binding HasAppNotice}" Padding="16,7"
+            Background="{DynamicResource WarningSoftBrush}" BorderBrush="{DynamicResource WarningBorderBrush}"
+            BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto" VerticalAlignment="Center">
+        <controls:IconPresenter Source="{x:Static ui:Icons.Alert}" Width="13" Height="13"
+                                Stroke="{DynamicResource WarningBrush}" />
+        <TextBlock Grid.Column="1" Margin="9,0,10,0" Text="{Binding AppNotice}" FontSize="10.5"
+                   TextWrapping="Wrap" MaxLines="3"
+                   Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Classes="icon" Width="24" Height="24"
+                Command="{Binding CopyAppNoticeCommand}" ToolTip.Tip="复制">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Copy}" Width="12" Height="12"
+                                  Stroke="{DynamicResource WarningBrush}" />
+        </Button>
+        <Button Grid.Column="3" Classes="icon" Width="24" Height="24"
+                Command="{Binding DismissAppNoticeCommand}" ToolTip.Tip="关闭">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Close}" Width="11" Height="11"
+                                  Stroke="{DynamicResource WarningBrush}" StrokeThickness="1.9" />
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- ================= 主体 ================= -->
+    <Grid Grid.Row="2" ColumnDefinitions="248,*">
+
+      <!-- 侧边栏 -->
+      <Border Grid.Column="0" Background="{DynamicResource SidebarGradientBrush}"
+              BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,0,1,0">
+        <Grid RowDefinitions="Auto,*,Auto" Margin="12,4,12,12">
+
+          <!-- 项目切换 -->
+          <Button Grid.Row="0" Classes="plain" Padding="10,9" CornerRadius="11"
+                  Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+                  BorderThickness="1" Command="{Binding ToggleProjectMenuCommand}"
+                  ToolTip.Tip="切换打包项目">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <Border Width="30" Height="30" CornerRadius="9" Background="{Binding ProjectAccent}">
+                <TextBlock Text="{Binding ProjectInitial}" FontSize="13" FontWeight="SemiBold"
+                           Foreground="#06080C" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+              <StackPanel Grid.Column="1" Margin="10,0,6,0" VerticalAlignment="Center" Spacing="1">
+                <TextBlock Text="{Binding ProjectTitle}" FontSize="12.5" FontWeight="Medium"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding ProjectConfigFileName}" FontSize="10" Classes="mono"
+                           TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+              <controls:IconPresenter Grid.Column="2" Source="{x:Static ui:Icons.ChevronDown}"
+                                      Width="14" Height="14" Stroke="{DynamicResource TextTertiaryBrush}"
+                                      VerticalAlignment="Center" />
+            </Grid>
+          </Button>
+
+          <!-- 导航 -->
+          <ListBox Grid.Row="1" Classes="nav" Margin="0,14,0,0"
+                   ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav}">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Border CornerRadius="9" Height="36">
+                  <Grid ColumnDefinitions="Auto,*,Auto" Margin="10,0">
+                    <controls:IconPresenter Source="{Binding Icon}" Width="16" Height="16"
+                                            VerticalAlignment="Center"
+                                            Classes="navicon" Classes.active="{Binding IsActive}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="12.5" Margin="10,0,0,0"
+                               VerticalAlignment="Center"
+                               Classes="navlabel" Classes.active="{Binding IsActive}" />
+                    <Border Grid.Column="2" Classes="pill" Background="{DynamicResource AccentSoftBrush}"
+                            IsVisible="{Binding HasBadge}" Padding="7,2">
+                      <TextBlock Text="{Binding Badge}" FontSize="10" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource AccentBrush}" />
+                    </Border>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <!-- CLI 状态 + 仓库链接 -->
+          <Border Grid.Row="2" Padding="6,5,8,5" CornerRadius="10"
+                  Background="{DynamicResource SurfaceBrush}"
+                  BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1">
+            <Grid ColumnDefinitions="*,Auto">
+              <Button Classes="plain" Padding="4,4" CornerRadius="8" HorizontalAlignment="Stretch"
+                      Command="{Binding OpenSettingsCommand}" ToolTip.Tip="打开全局设置">
+                <Grid ColumnDefinitions="Auto,*">
+                  <Ellipse Width="7" Height="7" Fill="{Binding CliStatusBrush}" VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="1" Margin="9,0,0,0" Spacing="2">
+                    <TextBlock Text="{Binding CliStatusText}" FontSize="11" FontWeight="Medium"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="本地命令行组件" FontSize="9.5"
+                               Foreground="{DynamicResource TextTertiaryBrush}" />
+                  </StackPanel>
+                </Grid>
+              </Button>
+
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="1" VerticalAlignment="Center">
+                <Button Classes="icon" Width="26" Height="26" ToolTip.Tip="Quire Studio 仓库"
+                        Command="{Binding OpenLinkCommand}" CommandParameter="{Binding StudioRepositoryUrl}">
+                  <controls:IconPresenter Source="{x:Static ui:Icons.GitHub}" Width="13" Height="13"
+                                          Fill="{DynamicResource TextTertiaryBrush}" StrokeThickness="0" />
+                </Button>
+                <Button Classes="icon" Width="26" Height="26" ToolTip.Tip="Quire CLI 仓库"
+                        Command="{Binding OpenLinkCommand}" CommandParameter="{Binding QuireRepositoryUrl}">
+                  <controls:IconPresenter Source="{x:Static ui:Icons.GitHub}" Width="13" Height="13"
+                                          Fill="{DynamicResource TextTertiaryBrush}" StrokeThickness="0" />
+                </Button>
+              </StackPanel>
+            </Grid>
+          </Border>
+        </Grid>
+      </Border>
+
+      <!-- 内容区 -->
+      <Grid Grid.Column="1">
+        <ContentControl Content="{Binding CurrentPage}" Margin="28,18,28,22"
+                        IsVisible="{Binding HasProject}" />
+
+        <!-- 空状态 -->
+        <Grid IsVisible="{Binding IsOnboarding}">
+
+          <!-- 步骤一：必须先选择工作区 -->
+          <StackPanel IsVisible="{Binding !HasWorkspace}" HorizontalAlignment="Center"
+                      VerticalAlignment="Center" Width="560" Spacing="14">
+            <Image Source="/Assets/window-icon.png" Width="54" Height="54" HorizontalAlignment="Left"
+                   RenderOptions.BitmapInterpolationMode="HighQuality" />
+            <TextBlock Classes="h1" Text="选择工作区" Margin="0,6,0,0" />
+            <TextBlock Classes="subtitle" TextWrapping="Wrap" HorizontalAlignment="Left"
+                       Text="Quire Studio 用一个工作区来安放项目与登记表。请选择一个目录作为工作区；之后直接启动会沿用上次关闭时的工作区。" />
+
+            <Button Classes="primary" HorizontalAlignment="Left" Content="选择文件夹…"
+                    Command="{Binding ChooseWorkspaceCommand}" Margin="0,6,0,0" />
+
+            <StackPanel Spacing="6" IsVisible="{Binding HasRecentWorkspaces}" Margin="0,10,0,0">
+              <TextBlock Classes="eyebrow" Text="最近工作区" />
+              <ScrollViewer MaxHeight="220" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding RecentWorkspaces}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Button Classes="plain" Command="{Binding ActivateCommand}"
+                              HorizontalAlignment="Stretch" Padding="8,6" CornerRadius="9"
+                              Margin="0,1">
+                        <Grid ColumnDefinitions="Auto,*">
+                          <Border Width="22" Height="22" CornerRadius="7" Background="{Binding Accent}">
+                            <TextBlock Text="{Binding Initial}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="#06080C" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                          </Border>
+                          <TextBlock Grid.Column="1" Margin="9,0,0,0" Text="{Binding Path}"
+                                     Classes="mono" FontSize="10.5" VerticalAlignment="Center"
+                                     TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- 步骤二：工作区已选定，创建工作区内第一个项目 -->
+          <StackPanel IsVisible="{Binding HasWorkspace}" HorizontalAlignment="Center"
+                      VerticalAlignment="Center" Width="560" Spacing="14">
+            <Image Source="/Assets/window-icon.png" Width="54" Height="54" HorizontalAlignment="Left"
+                   RenderOptions.BitmapInterpolationMode="HighQuality" />
+            <TextBlock Classes="h1" Text="开始使用 Quire Studio" Margin="0,6,0,0" />
+            <TextBlock Classes="subtitle" TextWrapping="Wrap" HorizontalAlignment="Left"
+                       Text="Quire 把源目录打包成 .asset 资源包，Tag 构成可提交的发布链。在当前工作区内创建一个项目，或添加已有的 quire.project.yml。" />
+
+            <Border Classes="card" Padding="18" Margin="0,10,0,0">
+              <StackPanel Spacing="10">
+                <TextBlock Classes="eyebrow" Text="新建项目" />
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBox Text="{Binding NewProjectName}" Watermark="项目名称，例如 my-assets"
+                           IsEnabled="{Binding !IsCreatingProject}" />
+                  <Button Grid.Column="1" Classes="primary" Margin="10,0,0,0" Content="创建项目"
+                          Command="{Binding CreateProjectCommand}" />
+                </Grid>
+                <TextBlock Classes="dim" FontSize="10.5" TextWrapping="Wrap"
+                           Text="{Binding WorkspaceDirectory, StringFormat='项目将创建在工作区：{0}'}" />
+              </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Classes="ghost" Content="添加已有项目…"
+                      Command="{Binding AddExistingProjectCommand}" />
+              <Button Classes="subtle" Content="切换工作区…" Command="{Binding ChooseWorkspaceCommand}" />
+            </StackPanel>
+
+            <TextBlock Text="{Binding ProjectError}" IsVisible="{Binding HasProjectError}"
+                       Foreground="{DynamicResource DangerBrush}" FontSize="11.5" TextWrapping="Wrap" />
+          </StackPanel>
+        </Grid>
+      </Grid>
+    </Grid>
+
+    <!-- ================= 项目切换面板 ================= -->
+    <Grid Grid.RowSpan="3" ZIndex="20" IsVisible="{Binding IsProjectMenuOpen}">
+      <Border Background="{DynamicResource ScrimBrush}" PointerPressed="OnScrimPointerPressed" />
+      <Border Width="404" Margin="18,56,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+              Background="{DynamicResource SurfaceRaisedBrush}" BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="1" CornerRadius="16" Padding="12"
+              BoxShadow="0 28 70 0 #99000000">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="eyebrow" Text="全部项目" Margin="6,2,0,2" />
+
+          <ScrollViewer MaxHeight="310" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Projects}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Classes="plain" Command="{Binding ActivateCommand}" Padding="8,7" CornerRadius="10"
+                          HorizontalAlignment="Stretch" Margin="0,1">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                      <Border Width="28" Height="28" CornerRadius="9" Background="{Binding Accent}">
+                        <TextBlock Text="{Binding Initial}" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="#06080C" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Border>
+                      <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center" Spacing="1">
+                        <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="Medium" />
+                        <TextBlock Text="{Binding ConfigFileName}" FontSize="10" Classes="mono"
+                                   TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <controls:IconPresenter Grid.Column="2" Source="{x:Static ui:Icons.Check}"
+                                              Width="14" Height="14" Stroke="{DynamicResource SuccessBrush}"
+                                              IsVisible="{Binding IsActive}" VerticalAlignment="Center" />
+                    </Grid>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+
+          <Border Classes="divider" Margin="6,4" />
+
+          <!-- 工作区与最近使用 -->
+          <StackPanel Spacing="5" Margin="6,0">
+            <TextBlock Classes="eyebrow" Text="工作区" />
+            <TextBlock Text="{Binding WorkspaceDisplay}" Classes="mono" FontSize="10"
+                       Foreground="{DynamicResource TextTertiaryBrush}"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="{Binding WorkspaceDirectory}" />
+          </StackPanel>
+
+          <ScrollViewer MaxHeight="148" HorizontalScrollBarVisibility="Disabled"
+                        IsVisible="{Binding HasRecentWorkspaces}">
+            <ItemsControl ItemsSource="{Binding RecentWorkspaces}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Classes="plain" Command="{Binding ActivateCommand}" HorizontalAlignment="Stretch"
+                          Padding="8,5" CornerRadius="9" Margin="0,1">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                      <Border Width="20" Height="20" CornerRadius="6" Background="{Binding Accent}">
+                        <TextBlock Text="{Binding Initial}" FontSize="9.5" FontWeight="SemiBold"
+                                   Foreground="#06080C" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                      </Border>
+                      <StackPanel Grid.Column="1" Margin="9,0,8,0" VerticalAlignment="Center" Spacing="1">
+                        <TextBlock Text="{Binding Name}" FontSize="11.5" />
+                        <TextBlock Text="{Binding Path}" Classes="mono" FontSize="9.5"
+                                   Foreground="{DynamicResource TextTertiaryBrush}"
+                                   TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <controls:IconPresenter Grid.Column="2" Source="{x:Static ui:Icons.Check}"
+                                              Width="12" Height="12"
+                                              Stroke="{DynamicResource SuccessBrush}"
+                                              IsVisible="{Binding IsCurrent}" />
+                    </Grid>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+
+          <Button Classes="plain" Command="{Binding ChooseWorkspaceCommand}" Padding="8,7" CornerRadius="9">
+            <StackPanel Orientation="Horizontal" Spacing="9">
+              <controls:IconPresenter Source="{x:Static ui:Icons.Folder}" Width="14" Height="14"
+                                      Stroke="{DynamicResource TextSecondaryBrush}" />
+              <TextBlock Text="选择工作区…" FontSize="12" />
+            </StackPanel>
+          </Button>
+
+          <Grid ColumnDefinitions="*,Auto" Margin="6,0,6,0">
+            <TextBox Text="{Binding NewProjectName}" Watermark="新项目名称" />
+            <Button Grid.Column="1" Classes="primary" Margin="8,0,0,0" Content="新建"
+                    Command="{Binding CreateProjectCommand}" />
+          </Grid>
+
+          <Button Classes="plain" Command="{Binding AddExistingProjectCommand}" Padding="8,7" CornerRadius="9">
+            <StackPanel Orientation="Horizontal" Spacing="9">
+              <controls:IconPresenter Source="{x:Static ui:Icons.Plus}" Width="14" Height="14"
+                                      Stroke="{DynamicResource TextSecondaryBrush}" />
+              <TextBlock Text="添加已有项目…" FontSize="12" />
+            </StackPanel>
+          </Button>
+
+          <Button Classes="plain" Command="{Binding OpenWorkspaceFolderCommand}" Padding="8,7" CornerRadius="9">
+            <StackPanel Orientation="Horizontal" Spacing="9">
+              <controls:IconPresenter Source="{x:Static ui:Icons.Folder}" Width="14" Height="14"
+                                      Stroke="{DynamicResource TextSecondaryBrush}" />
+              <TextBlock Text="打开工作区" FontSize="12" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+  </Grid>
+</Window>

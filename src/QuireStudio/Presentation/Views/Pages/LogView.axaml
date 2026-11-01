@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:QuireStudio.Presentation"
+             xmlns:controls="using:QuireStudio.Presentation.Controls"
+             x:Class="QuireStudio.Presentation.Views.Pages.LogView">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- 页头 -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+      <StackPanel Spacing="5">
+        <TextBlock Classes="eyebrow" Text="ACTIVITY" />
+        <TextBlock Classes="h1" Text="运行日志" />
+        <TextBlock Classes="subtitle" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"
+                   Text="CLI 调用、错误与项目切换的完整流水。独立成页后不再被项目概览挤占，也方便整段复制反馈问题。" />
+      </StackPanel>
+
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+        <TextBlock Text="{Binding Hint}" FontSize="10.5" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextTertiaryBrush}" />
+        <Button Classes="ghost" Padding="12,6" Command="{Binding CopyLogCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <controls:IconPresenter Source="{x:Static ui:Icons.Copy}" Width="13" Height="13"
+                                    Stroke="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Text="复制全部" FontSize="11.5" />
+          </StackPanel>
+        </Button>
+        <Button Classes="subtle" Padding="12,6" Content="清空" FontSize="11.5"
+                Command="{Binding ClearLogCommand}" />
+      </StackPanel>
+    </Grid>
+
+    <!-- 日志列表 -->
+    <Border Grid.Row="1" Classes="card" Padding="0">
+      <Grid>
+        <ListBox Classes="rows" ItemsSource="{Binding Entries}" x:Name="LogList" Padding="12,10">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="Auto,Auto,*" Margin="0,2">
+                <TextBlock Classes="mono" FontSize="10" Text="{Binding TimeText}"
+                           Foreground="{DynamicResource TextTertiaryBrush}" />
+                <TextBlock Grid.Column="1" Text="{Binding Glyph}" FontSize="10"
+                           Foreground="{Binding Brush}" Margin="10,0,7,0" />
+                <TextBlock Grid.Column="2" Text="{Binding Message}" FontSize="11.5"
+                           Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel IsVisible="{Binding !HasEntries}" VerticalAlignment="Center"
+                    HorizontalAlignment="Center" Spacing="6">
+          <TextBlock Text="还没有日志" FontSize="12.5"
+                     Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+          <TextBlock Text="执行打包、提交或切换项目后，这里会记录每一步" FontSize="10.5"
+                     Foreground="{DynamicResource TextTertiaryBrush}" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

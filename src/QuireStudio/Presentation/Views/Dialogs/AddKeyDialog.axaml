@@ -1,0 +1,99 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:QuireStudio.Presentation"
+        xmlns:controls="using:QuireStudio.Presentation.Controls"
+        x:Class="QuireStudio.Presentation.Views.Dialogs.AddKeyDialog"
+        Title="添加命名密钥"
+        Width="472"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        SystemDecorations="None"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource SurfaceRaisedBrush}"
+        FontFamily="{DynamicResource UiFont}"
+        FontSize="12.5"
+        KeyDown="OnKeyDown">
+
+  <Border CornerRadius="0" Padding="0"
+          Background="{DynamicResource SurfaceRaisedBrush}"
+          BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+    <Grid RowDefinitions="Auto,Auto,Auto">
+
+      <!-- 头部 -->
+      <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="20,18,12,0"
+            PointerPressed="OnHeaderPointerPressed" Background="Transparent">
+        <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource BrandGradientBrush}"
+                VerticalAlignment="Top">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Key}" Stroke="#06080C"
+                                  StrokeThickness="2" Width="16" Height="16" />
+        </Border>
+
+        <StackPanel Grid.Column="1" Margin="12,0,8,0" Spacing="3" VerticalAlignment="Center">
+          <TextBlock Text="添加命名密钥" FontSize="14" FontWeight="SemiBold" />
+          <TextBlock Text="密钥保存在当前用户目录，跨项目共享。"
+                     FontSize="10.5" Foreground="{DynamicResource TextTertiaryBrush}" />
+        </StackPanel>
+
+        <Button Grid.Column="2" Classes="icon" Click="OnCloseClick" VerticalAlignment="Top"
+                IsTabStop="False" ToolTip.Tip="关闭">
+          <controls:IconPresenter Source="{x:Static ui:Icons.Close}" Width="12" Height="12"
+                                  Stroke="{DynamicResource TextTertiaryBrush}" StrokeThickness="1.9" />
+        </Button>
+      </Grid>
+
+      <!-- 表单 -->
+      <StackPanel Grid.Row="1" Margin="20,18,20,0" Spacing="14">
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="密钥名称" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBox x:Name="NameBox" Text="{Binding Name}" Watermark="例如 game-prod" />
+          <TextBlock Text="{Binding NameWarning}" IsVisible="{Binding HasNameWarning}"
+                     FontSize="10" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="密码" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBox Text="{Binding Password}" PasswordChar="•" Watermark="用于派生 AES 主密钥与签名私钥" />
+          <TextBlock Text="{Binding PasswordError}" IsVisible="{Binding HasPasswordError}"
+                     FontSize="10" Foreground="{DynamicResource DangerBrush}" />
+        </StackPanel>
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="确认密码" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBox Text="{Binding Confirmation}" PasswordChar="•" Watermark="再次输入同一密码" />
+          <TextBlock Text="{Binding ConfirmationError}" IsVisible="{Binding HasConfirmationError}"
+                     FontSize="10" Foreground="{DynamicResource DangerBrush}" />
+        </StackPanel>
+
+        <Border CornerRadius="10" Padding="12,9" Background="{DynamicResource SurfaceSunkenBrush}"
+                BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1">
+          <Grid ColumnDefinitions="Auto,*">
+            <controls:IconPresenter Source="{x:Static ui:Icons.Shield}" Width="14" Height="14"
+                                    Stroke="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Top" />
+            <TextBlock Grid.Column="1" Margin="9,0,0,0" Text="{Binding PasswordHint}" FontSize="10"
+                       TextWrapping="Wrap" Foreground="{DynamicResource TextTertiaryBrush}" />
+          </Grid>
+        </Border>
+
+        <TextBlock Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" FontSize="10.5"
+                   TextWrapping="Wrap" Foreground="{DynamicResource DangerBrush}" />
+      </StackPanel>
+
+      <!-- 底部 -->
+      <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="20,18,20,18">
+        <TextBlock Text="相同密码可在另一台机器派生同一密钥" FontSize="10"
+                   VerticalAlignment="Center" TextWrapping="Wrap"
+                   Foreground="{DynamicResource TextTertiaryBrush}" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <Button Classes="ghost" Content="取消" Command="{Binding CancelCommand}" />
+          <Button Classes="primary" Content="派生并保存" Command="{Binding ConfirmCommand}"
+                  IsEnabled="{Binding CanSubmit}" />
+        </StackPanel>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

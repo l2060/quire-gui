@@ -1,0 +1,31 @@
+## Build output
+bin/
+obj/
+artifacts/
+publish/
+
+## IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+## Node / tooling leftovers
+node_modules/
+
+## OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Local reference checkout of the upstream Quire repository (not part of the product)
+_reference/
+
+## Portable GUI data directory used by the screenshots
+.local-data/
+
+## Screenshots produced while validating the UI
+screenshots/local/
+.local-data/

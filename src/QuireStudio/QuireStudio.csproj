@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <AssemblyName>QuireStudio</AssemblyName>
+    <RootNamespace>QuireStudio</RootNamespace>
+    <EnableDefaultAvaloniaItems>true</EnableDefaultAvaloniaItems>
+    <ApplicationTitle>Quire Studio</ApplicationTitle>
+    <Product>Quire Studio</Product>
+    <Company>Quire Studio</Company>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <TrimMode>partial</TrimMode>
+    <!-- 生成 XML 文档，才能启用 IDE0005（删除多余的 using） -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 不强制每个公共成员都写注释；Avalonia 的运行时 XAML 加载提示与本项目无关 -->
+    <NoWarn>$(NoWarn);CS1591;AVLN3001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 窗口图标：默认的 Avalonia 资源通配不覆盖 png，这里显式声明 -->
+    <AvaloniaResource Include="Assets\window-icon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.22" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+
+</Project>
