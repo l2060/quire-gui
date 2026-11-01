@@ -44,6 +44,37 @@
               <Button Grid.Column="2" Classes="ghost" Content="应用并检测" Margin="8,0,0,0"
                       Command="{Binding RecheckCliCommand}" />
             </Grid>
+
+            <Border Classes="divider" />
+
+            <!-- 从 NuGet 下载 / 更新 -->
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+              <TextBlock Text="{Binding CliUpdateText}" FontSize="10.5" VerticalAlignment="Center"
+                         TextWrapping="Wrap" Margin="0,0,12,0"
+                         Foreground="{DynamicResource TextTertiaryBrush}" />
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button Classes="ghost" Content="检查更新" Padding="12,5" FontSize="11"
+                        Command="{Binding CheckCliUpdatesCommand}"
+                        IsEnabled="{Binding !IsInstallingCli}" />
+                <Button Classes="primary" Padding="14,5" FontSize="11" Command="{Binding InstallCliCommand}"
+                        IsEnabled="{Binding !IsInstallingCli}">
+                  <TextBlock Text="{Binding InstallButtonText}" FontSize="11" Foreground="#FFFFFF" />
+                </Button>
+              </StackPanel>
+
+              <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Spacing="6" Margin="0,10,0,0"
+                          IsVisible="{Binding IsInstallingCli}">
+                <ProgressBar Minimum="0" Maximum="100" Value="{Binding CliProgressValue}" />
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding CliProgressText}" FontSize="10"
+                             Foreground="{DynamicResource TextTertiaryBrush}"
+                             TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="1" FontSize="10" Classes="mono"
+                             Foreground="{DynamicResource TextTertiaryBrush}"
+                             Text="{Binding CliProgressValue, StringFormat='{}{0:0}%'}" />
+                </Grid>
+              </StackPanel>
+            </Grid>
           </StackPanel>
         </Border>
 

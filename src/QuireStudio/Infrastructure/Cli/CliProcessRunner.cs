@@ -40,7 +40,16 @@ public sealed class CliProcessRunner
 
         string commandText = displayCommand ?? CliResult.BuildCommandText(arguments);
 
-        var startInfo = new ProcessStartInfo(executablePath)
+        // 安装出来的启动器是脚本（Windows 上为 .cmd），需要交给命令解释器执行。
+        bool isScript = OperatingSystem.IsWindows() &&
+                        (executablePath.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase) ||
+                         executablePath.EndsWith(".bat", StringComparison.OrdinalIgnoreCase));
+
+        string fileName = isScript
+            ? Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe"
+            : executablePath;
+
+        var startInfo = new ProcessStartInfo(fileName)
         {
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -53,6 +62,12 @@ public sealed class CliProcessRunner
         if (!string.IsNullOrWhiteSpace(workingDirectory) && Directory.Exists(workingDirectory))
         {
             startInfo.WorkingDirectory = workingDirectory;
+        }
+
+        if (isScript)
+        {
+            startInfo.ArgumentList.Add("/c");
+            startInfo.ArgumentList.Add(executablePath);
         }
 
         foreach (string argument in arguments)

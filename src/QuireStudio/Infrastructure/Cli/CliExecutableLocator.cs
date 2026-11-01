@@ -31,8 +31,20 @@ public static class CliExecutableLocator
             return null;
         }
 
+        // 脚本启动器（.cmd）不是 PE 文件，读不到文件版本；
+        // 安装时会写一个同名 .version 旁文件，这里优先使用。
         try
         {
+            string sidecar = executablePath + ".version";
+            if (File.Exists(sidecar))
+            {
+                string text = File.ReadAllText(sidecar).Trim();
+                if (text.Length > 0)
+                {
+                    return text;
+                }
+            }
+
             FileVersionInfo info = FileVersionInfo.GetVersionInfo(executablePath);
             string? version = FirstMeaningful(info.ProductVersion, info.FileVersion);
             return version?.Split('+')[0];
