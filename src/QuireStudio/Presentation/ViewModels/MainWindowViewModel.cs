@@ -636,11 +636,48 @@ public sealed partial class MainWindowViewModel : ObservableObject, IWorkspace
         ProjectConfigurationLoadResult result = _configurationReader.Read(selected);
         string name = result.Configuration?.DisplayName ?? Path.GetFileNameWithoutExtension(selected);
 
+        string configPath = Path.GetFullPath(selected);
+
+        // 工作区外的项目：整目录复制进工作区（YAML + .quire + 相对资源目录，跳过 dist）。
+        if (!IsManagedPath(configPath))
+        {
+            IsCreatingProject = true;
+
+            try
+            {
+                Log.Info($"正在导入项目到工作区：{name}");
+
+                ProjectImportResult import = await Task
+                    .Run(() => ProjectImportService.Import(selected, WorkspaceDirectory, result.Configuration))
+                    .ConfigureAwait(true);
+
+                if (!import.Succeeded)
+                {
+                    ProjectError = import.Error;
+                    Log.Error(import.Error ?? "导入项目失败。");
+                    return;
+                }
+
+                configPath = import.ConfigPath!;
+                Log.Success($"项目 {name} 已导入工作区：复制 {import.CopiedFiles} 个文件 → {Path.GetDirectoryName(configPath)}");
+
+                if (import.ExternalSources.Count > 0)
+                {
+                    Log.Warning(
+                        $"以下资源目录位于项目之外，未随项目复制，仍指向原位置：{string.Join("、", import.ExternalSources)}");
+                }
+            }
+            finally
+            {
+                IsCreatingProject = false;
+            }
+        }
+
         ProjectRecord record = Registry.Register(new ProjectRecord
         {
             Name = name,
-            ConfigPath = Path.GetFullPath(selected),
-            IsManaged = IsManagedPath(selected),
+            ConfigPath = configPath,
+            IsManaged = true,
         });
         SaveRegistry();
 
