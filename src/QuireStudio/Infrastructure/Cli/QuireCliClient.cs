@@ -8,8 +8,21 @@ namespace QuireStudio.Infrastructure.Cli;
 /// </summary>
 public sealed class QuireCliClient
 {
-    /// <summary>查询与轻量命令的看门狗时限；打包命令不设限，由用户主动取消。</summary>
+    /// <summary>轻量命令（init / commit / remove / keys）的空闲看门狗：60 秒没有任何输出即视为挂起。</summary>
     private static readonly TimeSpan ShortCommandTimeout = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// 重查询（tags / changes）的空闲看门狗。
+    /// 这类命令在学习期不输出进度，只靠最终的 JSON 结束，因此把余量放宽到 5 分钟；
+    /// 只要 CLI 仍在运行且没有输出，就说明它可能真的卡住了。
+    /// </summary>
+    private static readonly TimeSpan HeavyQueryTimeout = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// 打包与差异的空闲看门狗。它们带 <c>-progress</c>，会持续输出阶段与进度事件；
+    /// 运行多久都不限，只有连续 3 分钟没有任何输出才强制终止。
+    /// </summary>
+    private static readonly TimeSpan StreamingIdleTimeout = TimeSpan.FromMinutes(3);
 
     private readonly CliProcessRunner _runner;
 
@@ -79,7 +92,7 @@ public sealed class QuireCliClient
             project.Directory,
             onEvent,
             cancellationToken: cancellationToken,
-            timeout: ShortCommandTimeout).ConfigureAwait(false);
+            timeout: HeavyQueryTimeout).ConfigureAwait(false);
 
         if (!result.Succeeded)
         {
@@ -106,7 +119,7 @@ public sealed class QuireCliClient
             project.Directory,
             onEvent,
             cancellationToken: cancellationToken,
-            timeout: ShortCommandTimeout).ConfigureAwait(false);
+            timeout: HeavyQueryTimeout).ConfigureAwait(false);
 
         return ToChangeOutcome(result);
     }
@@ -127,7 +140,7 @@ public sealed class QuireCliClient
             project.Directory,
             onEvent,
             cancellationToken: cancellationToken,
-            timeout: ShortCommandTimeout).ConfigureAwait(false);
+            timeout: StreamingIdleTimeout).ConfigureAwait(false);
 
         return ToChangeOutcome(result);
     }
@@ -157,7 +170,7 @@ public sealed class QuireCliClient
             project.Directory,
             onEvent,
             cancellationToken: cancellationToken,
-            timeout: ShortCommandTimeout).ConfigureAwait(false);
+            timeout: StreamingIdleTimeout).ConfigureAwait(false);
 
         return ToTagOutcome(result);
     }

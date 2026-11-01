@@ -23,7 +23,8 @@ public sealed class CliProcessRunner
     /// <param name="displayCommand">记录到日志里的命令文本；为空时由参数自动拼接。</param>
     /// <param name="cancellationToken">取消令牌；触发后立即结束子进程。</param>
     /// <param name="timeout">
-    /// 可选看门狗：超时后强制结束子进程，避免 CLI 意外挂起时界面永久等待。
+    /// 可选看门狗，语义是<b>空闲超时</b>：连续这么久没有任何输出才认为 CLI 挂起并强制结束。
+    /// 只要子进程还在持续输出（例如打包进度），运行多久都不会被终止。
     /// </param>
     public async Task<CliResult> RunAsync(
         string executablePath,
@@ -91,6 +92,8 @@ public sealed class CliProcessRunner
                 Timeout.InfiniteTimeSpan)
             : null;
 
+        void Touch() => watchdog?.Change(timeout!.Value, Timeout.InfiniteTimeSpan);
+
         Task<string> diagnosticsTask = process.StandardError.ReadToEndAsync(CancellationToken.None);
 
         try
@@ -101,6 +104,10 @@ public sealed class CliProcessRunner
                 {
                     continue;
                 }
+
+                // 只要有输出就重置看门狗：长任务靠进展证明自己还活着，
+                // 只有真正"没有任何输出"才算挂起。
+                Touch();
 
                 CliEvent? parsed = CliEventParser.Parse(line, out string? parseError);
                 if (parsed is null)
@@ -143,7 +150,7 @@ public sealed class CliProcessRunner
         string? errorMessage = succeeded
             ? null
             : timedOut
-                ? $"quire-cli 在 {timeout!.Value.TotalSeconds:0} 秒内没有响应，已终止。"
+                ? $"quire-cli 连续 {timeout!.Value.TotalSeconds:0} 秒没有任何输出，已终止。大工程请重试或手动运行 quire-cli 排查。"
                 : terminal?.ErrorMessage ?? BuildFailureMessage(canceled, exitCode, diagnostics, protocolError);
 
         return new CliResult
