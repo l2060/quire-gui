@@ -51,6 +51,10 @@ public sealed partial class GlobalSettingsViewModel : BusyPageViewModel
     [ObservableProperty]
     private string _installButtonText = "下载安装";
 
+    /// <summary>当前 CLI 的来源说明，以及更新会作用到哪里。</summary>
+    [ObservableProperty]
+    private string _cliOriginText = "";
+
     /// <summary>NuGet 上的最新稳定版本。</summary>
     [ObservableProperty]
     private string? _latestCliVersion;
@@ -208,9 +212,26 @@ public sealed partial class GlobalSettingsViewModel : BusyPageViewModel
                 CliProgressText = report.Message;
             });
 
-            CliInstallResult result = await _installer
-                .InstallAsync(target, progress, cancellationToken)
-                .ConfigureAwait(true);
+            // 已通过 dotnet tool 全局安装、且本机有 SDK 时原地升级，不另存一份；
+            // 其余情况下载到 QuireStudio 目录并切换使用。原地升级失败也会退回下载。
+            CliInstallResult result;
+
+            if (CliToolInstaller.IsGlobalTool(Workspace.Cli.ExecutablePath) &&
+                await _installer.HasDotnetSdkAsync(cancellationToken).ConfigureAwait(true))
+            {
+                result = await _installer.UpdateGlobalToolAsync(target, progress, cancellationToken).ConfigureAwait(true);
+
+                if (!result.Succeeded)
+                {
+                    Workspace.Log.Warning($"原地升级全局工具失败，改为安装到 QuireStudio 目录：{result.Error}");
+                    CliProgressValue = 0;
+                    result = await _installer.InstallAsync(target, progress, cancellationToken).ConfigureAwait(true);
+                }
+            }
+            else
+            {
+                result = await _installer.InstallAsync(target, progress, cancellationToken).ConfigureAwait(true);
+            }
 
             if (!result.Succeeded)
             {
@@ -299,11 +320,33 @@ public sealed partial class GlobalSettingsViewModel : BusyPageViewModel
 
     private void RefreshCliStatus()
     {
+        CliOriginText = DescribeOrigin(Workspace.Cli.ExecutablePath);
+
         CliReady = Workspace.Cli.IsAvailable;
         CliStatusText = CliReady
             ? $"quire-cli {Workspace.Cli.Version ?? "未知版本"}"
             : "未找到 quire-cli";
         CliStatusBrush = CliReady ? Palette.Success : Palette.Danger;
+    }
+
+    private string DescribeOrigin(string? executablePath)
+    {
+        if (string.IsNullOrWhiteSpace(executablePath))
+        {
+            return "当前来源：未检测到可执行文件。";
+        }
+
+        if (CliToolInstaller.IsGlobalTool(executablePath))
+        {
+            return "当前来源：dotnet 全局工具（有 SDK 时原地升级；没有 SDK 则下载到 QuireStudio 目录并切换）。";
+        }
+
+        if (_installer.IsManaged(executablePath))
+        {
+            return "当前来源：QuireStudio 目录（更新会替换这份副本）。";
+        }
+
+        return "当前来源：外部路径（更新会下载到 QuireStudio 目录并切换使用）。";
     }
 
     private void RefreshShellState()

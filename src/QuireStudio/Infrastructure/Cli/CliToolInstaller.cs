@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
+using System.Xml.Linq;
 
 namespace QuireStudio.Infrastructure.Cli;
 
@@ -112,6 +114,120 @@ public sealed class CliToolInstaller
         }
     }
 
+    /// <summary>dotnet 全局工具目录（<c>dotnet tool install -g</c> 的落点）。</summary>
+    public static string GlobalToolDirectory => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        ".dotnet",
+        "tools");
+
+    /// <summary>判断可执行文件是否来自 dotnet 全局工具安装。</summary>
+    public static bool IsGlobalTool(string? executablePath)
+    {
+        if (string.IsNullOrWhiteSpace(executablePath))
+        {
+            return false;
+        }
+
+        try
+        {
+            string root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(GlobalToolDirectory));
+            string full = Path.GetFullPath(executablePath);
+
+            return full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>判断可执行文件是否由 QuireStudio 自己下载维护。</summary>
+    public bool IsManaged(string? executablePath)
+    {
+        if (string.IsNullOrWhiteSpace(executablePath))
+        {
+            return false;
+        }
+
+        try
+        {
+            string root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(ToolPath));
+            string full = Path.GetFullPath(executablePath);
+
+            return full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>本机是否装了 .NET SDK（<c>dotnet tool</c> 需要它；只有运行时不够）。</summary>
+    public async Task<bool> HasDotnetSdkAsync(CancellationToken cancellationToken = default)
+    {
+        if (ResolveDotnetHost() is not { } host)
+        {
+            return false;
+        }
+
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(15));
+
+            (int exitCode, string output) = await RunAsync(host, ["--list-sdks"], timeout.Token).ConfigureAwait(false);
+            return exitCode == 0 && !string.IsNullOrWhiteSpace(output);
+        }
+        catch (Exception exception) when (exception is OperationCanceledException or IOException or InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 原地升级 dotnet 全局工具。仅当本机有 SDK 且 CLI 确实装在全局工具目录时可用。
+    /// </summary>
+    public async Task<CliInstallResult> UpdateGlobalToolAsync(
+        string version,
+        IProgress<CliInstallProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (ResolveDotnetHost() is not { } host)
+        {
+            return new CliInstallResult { Error = "未找到 dotnet 命令，无法升级全局工具。" };
+        }
+
+        progress?.Report(new CliInstallProgress(5, $"正在用 dotnet tool 升级到 {version}…"));
+
+        (int exitCode, string output) = await RunAsync(
+            host,
+            ["tool", "update", "-g", PackageId, "--version", version],
+            cancellationToken).ConfigureAwait(false);
+
+        string globalExecutable = Path.Combine(
+            GlobalToolDirectory,
+            OperatingSystem.IsWindows() ? $"{PackageId}.exe" : PackageId);
+
+        if (exitCode != 0)
+        {
+            return new CliInstallResult
+            {
+                Error = string.IsNullOrWhiteSpace(output)
+                    ? $"升级全局工具失败（dotnet 退出码 {exitCode}）。"
+                    : $"升级全局工具失败：{FirstLine(output)}",
+            };
+        }
+
+        progress?.Report(new CliInstallProgress(100, $"全局工具已升级到 {version}"));
+
+        return new CliInstallResult
+        {
+            Succeeded = true,
+            ExecutablePath = globalExecutable,
+            Version = version,
+        };
+    }
+
     /// <summary>下载并安装指定版本。</summary>
     public async Task<CliInstallResult> InstallAsync(
         string version,
@@ -121,19 +237,6 @@ public sealed class CliToolInstaller
         if (string.IsNullOrWhiteSpace(version))
         {
             return new CliInstallResult { Error = "缺少要安装的版本号。" };
-        }
-
-        string host;
-
-        try
-        {
-            host = ResolveDotnetHost()
-                ?? throw new InvalidOperationException(
-                    "未找到 .NET 运行时宿主（dotnet）。请先安装 .NET 10 运行时后重试。");
-        }
-        catch (InvalidOperationException exception)
-        {
-            return new CliInstallResult { Error = exception.Message };
         }
 
         string packagePath;
@@ -151,31 +254,77 @@ public sealed class CliToolInstaller
         try
         {
             progress?.Report(new CliInstallProgress(DownloadWeight + 2, "正在解包…"));
-
-            string toolDirectory = Path.Combine(ToolPath, "quire-cli", version);
-            TryDeleteDirectory(toolDirectory);
-
-            string cliDll = ExtractTool(packagePath, toolDirectory, progress);
-
-            WriteLauncher(host, cliDll, version);
-
-            progress?.Report(new CliInstallProgress(100, $"已安装 quire-cli {version}"));
-
-            return new CliInstallResult
-            {
-                Succeeded = true,
-                ExecutablePath = LauncherPath,
-                Version = version,
-            };
-        }
-        catch (Exception exception) when (
-            exception is IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException)
-        {
-            return new CliInstallResult { Error = $"安装 quire-cli 失败：{exception.Message}" };
+            return await InstallFromPackageAsync(packagePath, version, progress, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             TryDeleteFile(packagePath);
+        }
+    }
+
+    /// <summary>
+    /// 从已下载的 <c>.nupkg</c> 安装（与下载分离，便于离线安装与测试）。
+    ///
+    /// <para>
+    /// 兼容两种 CLI 形态：
+    /// 原生可执行文件（AOT / 自带 apphost）→ 直接使用它，不再需要 dotnet；
+    /// 只有托管程序集（框架依赖）→ 生成调用 <c>dotnet &lt;dll&gt;</c> 的启动脚本。
+    /// </para>
+    /// </summary>
+    public Task<CliInstallResult> InstallFromPackageAsync(
+        string packagePath,
+        string version,
+        IProgress<CliInstallProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(packagePath))
+        {
+            return Task.FromResult(new CliInstallResult { Error = $"安装包不存在：{packagePath}" });
+        }
+
+        try
+        {
+            string toolDirectory = Path.Combine(ToolPath, "quire-cli", version);
+            TryDeleteDirectory(toolDirectory);
+
+            ToolEntry entry = ExtractTool(packagePath, toolDirectory, progress);
+
+            string executablePath;
+
+            if (entry.NativeExecutable is { } native)
+            {
+                // 原生 exe：直接运行，不需要 dotnet，也不需要启动脚本。
+                File.WriteAllText(native + ".version", version, new UTF8Encoding(false));
+                executablePath = native;
+            }
+            else if (entry.ManagedAssembly is { } assembly && ResolveDotnetHost() is { } host)
+            {
+                WriteLauncher(host, assembly, version);
+                executablePath = LauncherPath;
+            }
+            else
+            {
+                return Task.FromResult(new CliInstallResult
+                {
+                    Error = entry.ManagedAssembly is null
+                        ? "包内没有找到 quire-cli 可执行文件。"
+                        : "包内是框架依赖版本，但本机没有可用的 .NET 运行时宿主（dotnet）。",
+                });
+            }
+
+            progress?.Report(new CliInstallProgress(100, $"已安装 quire-cli {version}"));
+
+            return Task.FromResult(new CliInstallResult
+            {
+                Succeeded = true,
+                ExecutablePath = executablePath,
+                Version = version,
+            });
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException)
+        {
+            return Task.FromResult(new CliInstallResult { Error = $"安装 quire-cli 失败：{exception.Message}" });
         }
     }
 
@@ -221,23 +370,27 @@ public sealed class CliToolInstaller
         return target;
     }
 
-    /// <summary>解包 <c>tools/&lt;tfm&gt;/any</c>，返回入口程序集路径。</summary>
-    private static string ExtractTool(
+    /// <summary>
+    /// 解包 <c>tools/&lt;tfm&gt;/any</c> 并识别入口：
+    /// 优先原生可执行文件（AOT / 自带 apphost），其次托管程序集。
+    /// </summary>
+    private static ToolEntry ExtractTool(
         string packagePath,
         string toolDirectory,
         IProgress<CliInstallProgress>? progress)
     {
         using ZipArchive archive = ZipFile.OpenRead(packagePath);
 
-        // 定位 tools/<tfm>/any/ 前缀（工具包固定布局），注意保留结尾斜杠。
         string? prefix = null;
 
         foreach (ZipArchiveEntry entry in archive.Entries)
         {
             string[] parts = entry.FullName.Split('/');
+            // 兼容 tools/<tfm>/any（托管）与 tools/<tfm>/<rid>（AOT 按 RID 打包）。
             if (parts.Length >= 4 &&
                 string.Equals(parts[0], "tools", StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(parts[2], "any", StringComparison.OrdinalIgnoreCase))
+                (string.Equals(parts[2], "any", StringComparison.OrdinalIgnoreCase) ||
+                 parts[2].Length > 0))
             {
                 prefix = $"{parts[0]}/{parts[1]}/{parts[2]}/";
                 break;
@@ -246,7 +399,7 @@ public sealed class CliToolInstaller
 
         if (prefix is null)
         {
-            throw new InvalidDataException("包内没有找到 tools/<tfm>/any 目录，可能不是 dotnet tool 包。");
+            throw new InvalidDataException("包内没有找到 tools/<tfm>/ 目录，可能不是 dotnet tool 包。");
         }
 
         List<ZipArchiveEntry> entries = archive.Entries
@@ -280,18 +433,68 @@ public sealed class CliToolInstaller
                 $"正在解包… {index}/{entries.Count}"));
         }
 
-        string? cliDll = Directory
+        return DetectEntry(toolDirectory);
+    }
+
+    /// <summary>在解包目录里找出可执行入口。</summary>
+    private static ToolEntry DetectEntry(string toolDirectory)
+    {
+        string command = "quire-cli";
+
+        // dotnet tool 包会声明命令名，AOT 产物通常就叫这个名字。
+        string settings = Path.Combine(toolDirectory, "DotnetToolSettings.xml");
+        if (File.Exists(settings))
+        {
+            try
+            {
+                XDocument document = XDocument.Load(settings);
+                string? name = document.Descendants()
+                    .FirstOrDefault(element => element.Name.LocalName == "Command")?
+                    .Attribute("Name")?.Value;
+
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    command = name.Trim();
+                }
+            }
+            catch (Exception exception) when (exception is IOException or System.Xml.XmlException)
+            {
+                // 声明文件读不出来就退回默认命令名。
+            }
+        }
+
+        string[] nativeCandidates = OperatingSystem.IsWindows()
+            ? [$"{command}.exe", "Quire.Cli.exe", "quire.exe"]
+            : [command, "Quire.Cli", "quire"];
+
+        foreach (string candidate in nativeCandidates)
+        {
+            string path = Path.Combine(toolDirectory, candidate);
+            if (File.Exists(path))
+            {
+                return new ToolEntry(path, null);
+            }
+        }
+
+        // 兜底：如果目录里只有一个可执行文件，就认为它是入口。
+        string[] executables = OperatingSystem.IsWindows()
+            ? Directory.GetFiles(toolDirectory, "*.exe", SearchOption.TopDirectoryOnly)
+            : [];
+
+        if (executables.Length == 1)
+        {
+            return new ToolEntry(executables[0], null);
+        }
+
+        string? assembly = Directory
             .EnumerateFiles(toolDirectory, "*.dll", SearchOption.TopDirectoryOnly)
             .FirstOrDefault(file => Path.GetFileName(file).Contains("Cli", StringComparison.OrdinalIgnoreCase));
 
-        if (cliDll is null)
-        {
-            throw new InvalidDataException("包内没有找到 CLI 入口程序集。");
-        }
-
-        return cliDll;
+        return assembly is null ? new ToolEntry(null, null) : new ToolEntry(null, assembly);
     }
 
+    /// <summary>安装产物：原生可执行文件与托管程序集二选一。</summary>
+    private sealed record ToolEntry(string? NativeExecutable, string? ManagedAssembly);
     /// <summary>生成调用 <c>dotnet &lt;cli.dll&gt;</c> 的启动脚本。</summary>
     private void WriteLauncher(string host, string cliDll, string version)
     {
@@ -365,6 +568,44 @@ public sealed class CliToolInstaller
 
         return null;
     }
+
+    /// <summary>运行一个子进程（用于 <c>dotnet tool</c> 与 SDK 探测）。</summary>
+    private static async Task<(int ExitCode, string Output)> RunAsync(
+        string executable,
+        IReadOnlyList<string> arguments,
+        CancellationToken cancellationToken)
+    {
+        var startInfo = new ProcessStartInfo(executable)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        foreach (string argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using var process = new Process { StartInfo = startInfo };
+
+        if (!process.Start())
+        {
+            return (-1, "无法启动 dotnet 进程。");
+        }
+
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync(CancellationToken.None);
+        Task<string> stderr = process.StandardError.ReadToEndAsync(CancellationToken.None);
+
+        await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+
+        string output = (await stdout.ConfigureAwait(false)) + (await stderr.ConfigureAwait(false));
+        return (process.ExitCode, output.Trim());
+    }
+
+    private static string FirstLine(string text) =>
+        text.Split('\n').Select(line => line.Trim()).FirstOrDefault(line => line.Length > 0) ?? text.Trim();
 
     private static string FormatSize(long bytes) => bytes switch
     {
